@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Royaume de la Salamandre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Lexend:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Idée : une maquette de la France posée sur une mer bleu nuit ; les textes sont des fiches ivoire, grosses lettres, mots clés surlignés au fluo comme dans le classeur. */
+:root{
+  color-scheme:light;
+  --nuit:#0d2038; --mer:#17406b; --azur:#2c5fb6; --azur-clair:#74a8f2;
+  --or:#f3c04a; --feu:#f0642a; --ivoire:#fcf8ee; --encre:#14203a; --gris:#5b6680;
+  --fluo:#ffe55e; --ok:#1f8a4c; --non:#c23b2e;
+  --titre:"Fraunces",Georgia,serif; --texte:"Lexend","Trebuchet MS",Verdana,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--nuit);color:var(--encre);font-family:var(--texte);overflow:hidden;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--feu);outline-offset:2px}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#labs{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.lab{position:absolute;left:0;top:0;pointer-events:auto;display:flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:999px;
+  background:var(--ivoire);color:var(--encre);font-weight:700;font-size:15px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);will-change:transform}
+.lab i{width:18px;height:18px;border-radius:50%;background:var(--or);box-shadow:0 0 0 0 rgba(243,192,74,.9);animation:pouls 1.8s infinite;flex:none}
+.lab.fait i{animation:none;background:#b9c0cc}
+.lab.or i{animation:none;background:var(--or);box-shadow:inset 0 0 0 3px #b9851a}
+.loin .lab{padding:6px}.loin .lab span{display:none}.loin .lab i{width:22px;height:22px}
+@keyframes pouls{70%{box-shadow:0 0 0 12px rgba(243,192,74,0)}100%{box-shadow:0 0 0 0 rgba(243,192,74,0)}}
+#hud{position:fixed;z-index:2;left:0;right:0;top:0;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:10px 12px;pointer-events:none}
+#hud>*{pointer-events:auto}
+.roi{background:rgba(13,32,56,.86);color:#fff;border-radius:14px;padding:8px 14px;border:2px solid var(--or);max-width:62%}
+.roi b{display:block;font-family:var(--titre);font-size:22px;line-height:1.1;color:var(--or)}
+.roi small{display:block;font-size:13px;opacity:.92;margin-top:2px}
+.roi em{display:block;font-style:normal;font-size:13px;margin-top:5px;color:#ffe9b5}
+.outils{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.btn{background:var(--ivoire);border-radius:12px;padding:10px 14px;font-weight:700;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.4);min-height:44px}
+.btn.or{background:var(--or)}
+.btn.feu{background:var(--feu);color:#fff}
+.btn[disabled]{opacity:.55;cursor:default}
+#ctl{position:fixed;z-index:2;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}
+#ctl button{width:44px;height:44px;border-radius:50%;background:rgba(252,248,238,.93);font-size:22px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+#legende{position:fixed;z-index:2;left:12px;bottom:92px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:#fff;background:rgba(13,32,56,.75);padding:7px 10px;border-radius:10px}
+#legende span{display:flex;align-items:center;gap:6px}
+#legende i{width:14px;height:14px;border-radius:3px;display:inline-block}
+#rois{position:fixed;z-index:2;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(13,32,56,.92) 35%)}
+#rois button{flex:1;min-width:0;background:rgba(252,248,238,.16);color:#fff;border-radius:12px;padding:7px 4px;border:2px solid transparent;min-height:60px}
+#rois button b{display:block;font-family:var(--titre);font-size:15px;line-height:1.15}
+#rois button small{font-size:12px;opacity:.9}
+#rois button.ici{background:var(--ivoire);color:var(--encre);border-color:var(--or)}
+#rois button.ferme{opacity:.5}
+#panneau{position:fixed;z-index:3;left:0;right:0;bottom:0;max-height:64%;background:var(--ivoire);border-radius:20px 20px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+#panneau[hidden],#voile[hidden],#toast[hidden]{display:none}
+.tete{display:flex;align-items:center;gap:10px;padding:12px 14px 8px;border-bottom:2px solid #eadfc6}
+.tete h2{font-family:var(--titre);font-size:22px;line-height:1.15;flex:1;text-wrap:balance}
+.tete h2 small{display:block;font-family:var(--texte);font-size:13px;font-weight:500;color:var(--gris)}
+.x{width:44px;height:44px;border-radius:50%;background:#eadfc6;font-size:20px;font-weight:700;flex:none}
+.pas{display:flex;gap:5px;padding:8px 16px 0}
+.pas i{flex:1;height:6px;border-radius:3px;background:#e6dcc4}.pas i.vu{background:var(--azur)}.pas i.jeu{background:#f0c9b4}.pas i.jeu.vu{background:var(--feu)}
+.corps{padding:12px 16px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.lire{font-size:21px;line-height:1.6;max-width:34em}
+.lire strong,.q strong,.fiche strong{background:linear-gradient(transparent 12%,var(--fluo) 12%,var(--fluo) 92%,transparent 92%);padding:0 3px;border-radius:3px;font-weight:700}
+.pied{display:flex;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid #eadfc6}
+.pied .btn{box-shadow:none;border:2px solid var(--encre)}
+.pied .suite{flex:1;background:var(--azur);color:#fff;border-color:var(--azur);position:relative;overflow:hidden}
+.pied .suite[disabled]{opacity:1;background:#9fb3d6;border-color:#9fb3d6}
+.pied .suite[disabled]::after{content:"";position:absolute;left:0;top:0;bottom:0;width:100%;background:rgba(255,255,255,.35);transform-origin:left;animation:attente var(--t,1.5s) linear forwards}
+@keyframes attente{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.q{font-size:20px;line-height:1.5;font-weight:500;margin-bottom:12px}
+.choix{display:flex;flex-direction:column;gap:10px}
+.choix button{text-align:left;font-size:19px;line-height:1.4;padding:13px 14px;border-radius:14px;background:#fff;border:2px solid #cfc4a8}
+.choix button.juste{background:#dff3e6;border-color:var(--ok)}
+.choix button.faux{background:#f9dedb;border-color:var(--non);opacity:.7}
+.choix.bacs{flex-direction:row;flex-wrap:wrap}.choix.bacs button{flex:1 1 40%;text-align:center;font-weight:700}
+.retour{font-size:18px;line-height:1.5;margin-top:12px;min-height:1.5em}
+.retour.ok{color:var(--ok);font-weight:700}.retour.non{color:var(--non);font-weight:700}
+.carte-jeu{font-size:20px;line-height:1.45;background:#fff;border:2px dashed var(--azur);border-radius:14px;padding:14px;margin-bottom:12px;text-align:center;font-weight:500}
+.dessin{width:100%;max-width:440px;display:block;margin:0 auto 10px;border-radius:12px;border:2px solid #cfc4a8;background:#fff;touch-action:manipulation}
+.dessin .zone{cursor:pointer}.dessin .trouve{filter:drop-shadow(0 0 4px #1f8a4c)}
+.plomb{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.plomb button,.plomb span{width:52px;height:60px;border-radius:8px;background:#5d6470;color:#fff;font-size:32px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--titre)}
+.plomb button b,.plomb span b{transform:scaleX(-1);display:block}
+.plomb span.vide{background:#e6dcc4}
+.plomb button[disabled]{opacity:.25}
+.feuille{background:#fff;border:2px solid #cfc4a8;border-radius:8px;padding:10px;font-family:var(--titre);font-size:38px;letter-spacing:.14em;text-align:center;margin:8px auto;max-width:300px}
+.sceau{width:110px;height:110px;margin:4px auto 10px;display:block}
+.liens{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.liens a{display:block;padding:11px 13px;border-radius:12px;background:#fff;border:2px solid #cfc4a8;color:var(--azur);font-weight:700;font-size:17px;line-height:1.35;text-decoration:none}
+.liens a small{display:block;color:var(--gris);font-weight:500;font-size:13px}
+#voile{position:fixed;inset:0;z-index:4;background:rgba(8,18,34,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#fiche{background:var(--ivoire);border-radius:20px;width:100%;max-width:640px;max-height:100%;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#fiche.large{max-width:1060px}
+.fiche{padding:16px 18px;overflow-y:auto;font-size:19px;line-height:1.55}
+.fiche h3{font-family:var(--titre);font-size:21px;margin:14px 0 6px}
+.fiche p{margin:0 0 10px;max-width:34em}
+.fiche ul{padding-left:1.1em;margin:0 0 10px}.fiche li{margin-bottom:6px}
+.grand{font-family:var(--titre);font-size:30px;line-height:1.1;margin-bottom:10px;text-wrap:balance}
+.onglets{display:flex;gap:6px;padding:0 14px;flex-wrap:wrap}
+.onglets button{padding:9px 12px;border-radius:10px 10px 0 0;font-weight:700;font-size:16px;background:#eadfc6;min-height:44px}
+.onglets button.ici{background:var(--azur);color:#fff}
+.tete,.onglets,.pied{flex:none}
+.arbre-info{flex:none;padding:10px 16px;font-size:18px;line-height:1.45;background:#fff7d6;border-bottom:2px solid #eadfc6;min-height:64px}
+.arbre-zone{overflow:auto;-webkit-overflow-scrolling:touch;flex:1;background:#fff}
+.arbre-zone svg{display:block;width:1010px;height:800px}
+.noeud{cursor:pointer}.noeud rect{fill:#fff;stroke:#8a8f9c;stroke-width:2}
+.noeud.roi rect{fill:#fff3cf;stroke:#b9851a;stroke-width:3}
+.noeud.sel rect{stroke:var(--feu);stroke-width:5}
+.noeud.cache rect{fill:#e9e6df;stroke-dasharray:6 5}
+.noeud text{font-family:var(--texte);font-size:15px;fill:var(--encre);text-anchor:middle;pointer-events:none}
+.noeud text.nom{font-weight:700;font-size:16px}
+.lst{list-style:none;padding:0}.lst li{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #eadfc6;font-size:18px}
+.pt{width:18px;height:18px;border-radius:50%;background:#e1d8c2;flex:none}.pt.arg{background:#b9c0cc}.pt.or{background:var(--or);box-shadow:inset 0 0 0 3px #b9851a}
+#toast{position:fixed;z-index:5;left:50%;top:96px;transform:translateX(-50%);background:var(--encre);color:#fff;padding:12px 16px;border-radius:12px;font-size:17px;line-height:1.4;max-width:min(92%,460px);text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.sans3d #labs{position:fixed;inset:150px 12px 90px 12px;overflow:auto;pointer-events:auto;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start}
+.sans3d .lab{position:static;transform:none!important;font-size:17px}.sans3d #ctl,.sans3d #legende{display:none}
+@media (min-width:900px){
+  #panneau{left:auto;right:16px;top:16px;bottom:96px;width:460px;max-height:none;border-radius:20px}
+  .lab{font-size:16px}.roi b{font-size:26px}
+  .outils{flex-direction:row}
+  #panneau:not([hidden]) ~ #hud .outils{visibility:hidden}
+}
+@media (prefers-reduced-motion:reduce){.lab i{animation:none}.pied .suite[disabled]::after{animation-duration:.01s}}
+
+/* ---- version 2 ---- */
+#legende[hidden]{display:none}.frise-zone,.arbre-zone{min-height:0}
+:root{--lettres:#2c5fb6;--arts:#c4572e;--pouvoir:#7a4aa0;--guerre:#b3362b;--antique:#7d6e4e;--monde:#1f8a86}
+.lab{padding:4px 10px 4px 4px;gap:5px}
+.lab i{width:26px;height:26px;font-style:normal;font-size:15px;display:flex;align-items:center;justify-content:center;background:var(--or)}
+.lab.fait i{background:#c9cfd9}.lab.or i{background:var(--or);box-shadow:inset 0 0 0 3px #b9851a}
+.lab.fait span::after,.lab.or span::after{content:" ✓"}
+.loin .lab{padding:3px}.loin .lab i{width:26px;height:26px}
+.outils{gap:6px}.outils .btn{padding:7px 12px;font-size:15px;min-height:40px}
+#sauts{position:fixed;z-index:2;left:12px;top:112px;display:flex;flex-direction:column;gap:6px}
+#sauts button,#bas button{background:rgba(13,32,56,.82);color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:999px;padding:7px 12px;font-size:14px;font-weight:700;min-height:36px;text-align:left}
+#bas{position:fixed;z-index:2;left:12px;bottom:84px;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;max-width:70%}
+#bas #b-retour{background:var(--ivoire);color:var(--encre);border-color:var(--or)}
+#bas #b-roi{background:var(--feu);border-color:#fff;animation:pouls 1.8s infinite}
+#legende{position:static;font-size:12.5px;line-height:1.5}
+#legende b{display:block;margin-top:4px;font-size:12px;opacity:.8;font-weight:500}
+#ctl button{width:42px;height:42px}
+#rois button{padding:6px 2px;min-height:56px}#rois button b{font-size:13.5px}#rois button small{font-size:11px}
+.tete.cat{color:#fff;border-bottom:0;border-radius:20px 20px 0 0;padding:10px 14px}
+.tete.cat h2 small{color:rgba(255,255,255,.9)}
+.tete.cat .x{background:rgba(255,255,255,.25);color:#fff}
+.tete .emb{font-size:30px;line-height:1;flex:none}
+.pas{padding:10px 16px 2px}
+.pas button{flex:1;height:14px;border-radius:7px;background:#e6dcc4;padding:0;position:relative}
+.pas button::after{content:"";position:absolute;inset:-12px 0}
+.pas button.vu{background:#9db7e6}.pas button.ici{background:var(--azur);box-shadow:0 0 0 3px rgba(44,95,182,.25)}
+.pas button.jeu{background:#f3cdb9}.pas button.jeu.vu{background:#f3a27f}.pas button.jeu.ici{background:var(--feu)}
+.pas button[disabled]{cursor:default}
+.etq{display:inline-block;font-size:14px;font-weight:700;padding:4px 10px;border-radius:8px;margin-bottom:8px;color:#fff}
+.bloc{border-left:6px solid transparent;padding-left:12px}
+.bloc.ant{border-color:var(--antique)}.bloc.ant .etq{background:var(--antique)}
+.bloc.ita{border-color:var(--arts)}.bloc.ita .etq{background:var(--arts)}
+.bloc.fra{border-color:var(--azur)}.bloc.fra .etq{background:var(--azur)}
+.bloc.lec{border-color:#e0b800}.bloc.lec .etq{background:var(--fluo);color:var(--encre)}
+.pied{flex-wrap:wrap}
+.pied .btn{padding:10px 12px}
+.aussi{margin-top:14px;padding:12px;border-radius:14px;background:#fff;border:2px solid var(--arts);font-size:18px;line-height:1.45}
+.aussi .btn{margin-top:8px;border:2px solid var(--encre);box-shadow:none}
+.frise-zone{overflow:auto;-webkit-overflow-scrolling:touch;flex:1;background:#fff;border-radius:0 0 20px 20px}
+.frise{position:relative}
+.fr-couloir{position:absolute;left:0;right:0}
+.fr-nom{position:sticky;left:8px;display:inline-block;font-weight:700;font-size:14px;padding:3px 9px;border-radius:8px;color:#fff;z-index:2}
+.fr-axe{position:absolute;left:0;right:0;height:52px;background:#f4eedd;border-top:2px solid #cfc4a8;border-bottom:2px solid #cfc4a8}
+.fr-roi{position:absolute;top:2px;height:22px;border-radius:6px;background:var(--or);font-size:13px;font-weight:700;line-height:22px;padding:0 8px;white-space:nowrap;overflow:hidden;border:1px solid #b9851a}
+.fr-an{position:absolute;top:28px;font-size:13px;color:var(--gris);transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.fr-trait{position:absolute;top:0;bottom:0;width:1px;background:#e9e2cf}
+.fr-puce{position:absolute;height:40px;display:flex;align-items:center;gap:6px;padding:0 10px 0 6px;border-radius:10px;font-size:14px;font-weight:700;white-space:nowrap;border:2px solid;background:#fff;color:var(--encre)}
+.fr-puce small{font-weight:500;color:var(--gris);font-variant-numeric:tabular-nums}
+.fr-puce.vu{background:#fff7d6}.fr-puce.ferme{opacity:.45}
+.lst button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:8px 0;font-size:18px}
+.lst li{padding:0}
+.pied .suite[disabled]{color:#fff}
+.noeud.indice rect{stroke:var(--feu);stroke-width:6;animation:clign 1s infinite}
+@keyframes clign{50%{fill:#ffd9c7}}
+.fz{overflow-y:auto;flex:1;min-height:0;background:#fff;border-radius:0 0 20px 20px;padding:0 10px 18px;position:relative;-webkit-overflow-scrolling:touch}
+.fz-h{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:1fr 50px 1fr;gap:6px;background:#fff;padding:8px 0;border-bottom:2px solid #eadfc6}
+.fz-h span{color:#fff;font-weight:700;font-size:14px;line-height:1.2;padding:6px 6px;border-radius:8px;text-align:center}
+.fz-roi{background:var(--or);border:1px solid #b9851a;border-radius:10px;padding:7px 12px;font-family:var(--titre);font-weight:800;font-size:19px;margin:14px 0 8px}
+.fz-roi small{display:block;font-family:var(--texte);font-weight:500;font-size:13.5px}
+.fz-l{display:grid;grid-template-columns:1fr 50px 1fr;gap:6px;align-items:start;padding:5px 0;border-bottom:1px dashed #e4dcc6}
+.fz-an{text-align:center;font-weight:700;font-size:15px;background:#f4eedd;border-radius:8px;padding:7px 0;font-variant-numeric:tabular-nums;line-height:1.15}
+.fz-c{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fz-e{display:block;width:100%;text-align:left;background:#fff;border:2px solid;border-left-width:7px;border-radius:10px;padding:7px 8px;font-size:15.5px;line-height:1.3;font-weight:700;overflow-wrap:anywhere}
+.fz-e small{display:block;font-weight:500;color:var(--gris);font-size:13px}
+.fz-e.vu{background:#fff7d6}.fz-e[disabled]{opacity:.45;cursor:default}
+@media (min-width:700px){.fz-e{font-size:17px;padding:9px 12px}.fz-h span{font-size:16px}}
+@media (max-width:899px){
+  #panneau:not([hidden]) ~ #ctl,#panneau:not([hidden]) ~ #sauts,#panneau:not([hidden]) ~ #bas,#panneau:not([hidden]) ~ #rois{display:none}
+  #panneau:not([hidden]) ~ #hud .outils{display:none}
+  .roi b{font-size:19px}.roi{padding:6px 12px}
+}
+@media (min-width:900px){#sauts{top:130px}.tete.cat{border-radius:20px 20px 0 0}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Carte en relief de l'Europe à la Renaissance"></canvas>
+<div id="labs"></div>
+<section id="panneau" hidden aria-live="polite">
+  <div class="tete cat" id="p-tete"><span class="emb" id="p-emb"></span><h2 id="p-titre"></h2><button class="x" id="p-x" aria-label="Fermer et revenir à la carte">✕</button></div>
+  <div class="pas" id="p-pas"></div>
+  <div class="corps" id="p-corps"></div>
+  <div class="pied" id="p-pied"></div>
+</section>
+<header id="hud">
+  <div class="roi"><b id="h-roi"></b><small id="h-sous"></small><em id="h-but"></em></div>
+  <div class="outils">
+    <button class="btn or" id="b-frise">Frise</button>
+    <button class="btn or" id="b-arbre">Arbre</button>
+    <button class="btn" id="b-carnet">Carnet</button>
+  </div>
+</header>
+<div id="sauts" aria-label="Aller vite sur la carte">
+  <button data-s="fr">France</button><button data-s="it">Italie</button><button data-s="or">Orient</button><button data-s="tout">Tout voir</button>
+</div>
+<div id="ctl">
+  <button id="z-plus" aria-label="Zoomer">+</button>
+  <button id="z-moins" aria-label="Dézoomer">−</button>
+  <button id="t-g" aria-label="Tourner la carte à gauche">↺</button>
+  <button id="t-d" aria-label="Tourner la carte à droite">↻</button>
+</div>
+<div id="bas">
+  <div id="legende" hidden>
+    <span><i style="background:#2c5fb6"></i>Domaine du roi de France</span>
+    <span><i style="background:#c9a35a"></i>Pas encore au roi</span>
+    <span><i style="background:#74a8f2"></i>Gagné par le roi</span>
+    <span><i style="background:#d8b384"></i>Italie</span>
+    <b>Les traits qui bougent</b>
+    <span><i style="background:#f3c04a;border-radius:50%"></i>Artistes en voyage</span>
+    <span><i style="background:#fff;border-radius:50%"></i>Livres en voyage</span>
+    <span><i style="background:#e2552d;border-radius:50%"></i>Armées</span>
+  </div>
+  <button id="b-leg" aria-expanded="false">Légende</button>
+  <button id="b-joueur">👤 Joueur</button>
+  <button id="b-retour" hidden>↩ Retour</button>
+  <button id="b-roi" hidden>👑 Nouveau roi</button>
+</div>
+<nav id="rois" aria-label="Choisir une époque"></nav>
+<div id="voile" hidden><div id="fiche" role="dialog" aria-modal="true"></div></div>
+<div id="toast" hidden role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+/* ============ DONNÉES ============ */
+const LIENS={
+ qh:["François Ier raconté aux enfants","Vidéo YouTube · Quelle Histoire","https://www.youtube.com/watch?v=pmg2Njw_KzE"],
+ lv:["Léonard de Vinci, l'homme aux mille visages","Vidéo Lumni","https://www.lumni.fr/video/leonard-de-vinci-l-homme-aux-mille-visages"],
+ jo:["La Joconde au musée du Louvre","Vidéo Lumni","https://www.lumni.fr/video/la-joconde-au-musee-du-louvre"],
+ vi:["L'homme de Vitruve : et toi, es-tu bien proportionné ?","Vidéo YouTube","https://www.youtube.com/watch?v=1x_6cCs4JH0"],
+ inv:["Les inventions de Léonard de Vinci","Vidéo YouTube","https://www.youtube.com/watch?v=zZ0vLRfwnUM"],
+ wd:["Le web-documentaire sur Léonard de Vinci","Site 1jour1actu","https://www.1jour1actu.com/culture/le-web-documentaire-sur-leonard-de-vinci-86405/"],
+ cps:["C'est pas sorcier : cherche « Les châteaux de la Loire »","Chaîne YouTube officielle","https://www.youtube.com/user/cestpassorcierftv/videos"],
+ gac:["Chambord en images","Google Arts & Culture","https://artsandculture.google.com/exhibit/hAISgMXgYCntIA"],
+ vf:["François Ier","Vikidia, l'encyclopédie des 8-13 ans","https://fr.vikidia.org/wiki/Fran%C3%A7ois_Ier_de_France"],
+ va:["L'art de la Renaissance","Vikidia","https://fr.vikidia.org/wiki/Art_de_la_Renaissance"],
+ vl:["Léonard de Vinci","Vikidia","https://fr.vikidia.org/wiki/L%C3%A9onard_de_Vinci"],
+ vr:["François Rabelais","Vikidia","https://fr.vikidia.org/wiki/Fran%C3%A7ois_Rabelais"],
+ vg:["Gargantua","Vikidia","https://fr.vikidia.org/wiki/Gargantua"],
+ vro:["Pierre de Ronsard","Vikidia","https://fr.vikidia.org/wiki/Ronsard"],
+ vm:["Michel de Montaigne","Vikidia","https://fr.vikidia.org/wiki/Michel_de_Montaigne"],
+ vc:["Jacques Cartier","Vikidia","https://fr.vikidia.org/wiki/Cartier"],
+ vch:["Le château de Chenonceau","Vikidia","https://fr.vikidia.org/wiki/Ch%C3%A2teau_de_Chenonceau"]
+};
+
+LIENS.vh=["L'humanisme au XVIe siècle","Vikidia","https://fr.vikidia.org/wiki/Humanisme_au_XVIe_si%C3%A8cle"];
+LIENS.vre=["La Renaissance","Vikidia","https://fr.vikidia.org/wiki/Renaissance"];
+const CATS={L:["Lettres","📖","var(--lettres)"],A:["Arts","🎨","var(--arts)"],P:["Pouvoir","👑","var(--pouvoir)"],G:["Guerres","⚔️","var(--guerre)"],Q:["Antiquité","🏛️","var(--antique)"],M:["Découvertes","⛵","var(--monde)"]};
+const COTES={F:"en France",I:"en Italie",E:"ailleurs en Europe"};
+const ETQ={A:["🏛️ L'idée vient de l'Antiquité","ant"],I:["Pendant ce temps, en Italie","ita"],F:["Pendant ce temps, en France","fra"],L:["📒 Dans ta leçon","lec"]};
+const EPOQUES=[
+ {roi:"Louis XI",ans:"1450 – 1483",sous:"Le monde change",noeud:"l11",
+  intro:["Vers **1450**, le Moyen Âge se termine. Sur ta frise, les **Temps modernes** commencent en 1492. Mais tout se prépare déjà !","Trois grandes nouveautés arrivent : l'**imprimerie**, la **Renaissance** des arts en Italie, et le retour des savoirs des **Grecs** et des **Romains**.","La carte est grande. Les boutons **France**, **Italie** et **Orient** te font voyager vite. Tu peux toujours **revenir en arrière**. Et cherche les **salamandres** orange cachées !"],
+  fin:"**1483.** Le roi Louis XI meurt. Son fils n'a que 13 ans. **Touche le nouveau roi dans l'arbre.**",suiv:"c8",aide:"C'est le fils de Louis XI : regarde juste en dessous de lui."},
+ {roi:"Charles VIII",ans:"1483 – 1498",sous:"Le roi qui découvre l'Italie",noeud:"c8",
+  intro:["**1483.** Charles VIII devient roi. En Italie, la Renaissance est en pleine fleur.","Le jeune roi va y partir en guerre… et revenir **émerveillé**.","Regarde bien les deux côtés des Alpes : que se passe-t-il **en France** ? Et **en Italie** au même moment ?"],
+  fin:"**1498.** Charles VIII meurt. Il n'a pas d'enfant vivant. La couronne passe à son plus proche cousin. **Touche le nouveau roi dans l'arbre.**",suiv:"l12",aide:"Cherche dans la branche du milieu : la famille d'Orléans."},
+ {roi:"Louis XII",ans:"1498 – 1515",sous:"Le « Père du peuple »",noeud:"l12",
+  intro:["**1498.** Louis XII, cousin de Charles VIII, devient roi. Il a 36 ans.","Lui aussi rêve de l'**Italie**. Là-bas, Léonard de Vinci, Michel-Ange et Raphaël créent leurs chefs-d'œuvre.","Pendant ce temps, un petit garçon grandit en France. Il s'appelle **François**…"],
+  fin:"**1515.** Louis XII meurt sans fils. À cette époque, une fille ne peut pas recevoir la couronne. **Qui sera roi ? Touche-le dans l'arbre.**",suiv:"f1",aide:"C'est un cousin de la branche d'Angoulême. Il a épousé Claude, la fille du roi."},
+ {roi:"François Ier",ans:"1515 – 1547",sous:"Protecteur des arts et des lettres",noeud:"f1",
+  intro:["**1515.** François Ier a 20 ans. Il est roi de France ! C'est environ 250 ans après Louis IX.","Sur ta frise, nous sommes au début des **Temps modernes**, au **XVIe siècle**.","Il veut les plus beaux **arts** et les plus beaux **livres** du monde. Pour cela, il regarde vers l'**Italie**… et vers l'**Antiquité**."],
+  fin:"**1547.** François Ier meurt. Son fils aîné, le dauphin François, est mort en 1536. **Qui devient roi ? Touche-le dans l'arbre.**",suiv:"h2",aide:"C'est le deuxième fils de François Ier."},
+ {roi:"Henri II",ans:"1547 – 1559",sous:"Le temps des poètes",noeud:"h2",
+  intro:["**1547.** Henri II a 28 ans. Tu l'as vu enfant sur la miniature de ta leçon, à côté de son père.","Les graines semées par François Ier poussent : les **poètes** et les **écrivains** français deviennent célèbres.","Ils veulent faire aussi bien que les **Grecs** et les **Romains**… mais en **français** !"],
+  fin:"",suiv:null}
+];
+/* id, e époque, n nom, c titre court, y année, k catégorie, s côté, lon, lat, m maquette, d date, f fiches, j jeu, v voir aussi, l liens */
+const LIEUX=[
+ {id:"mayence",e:0,n:"Mayence",c:"Gutenberg invente l'imprimerie",y:1450,k:"L",s:"E",lon:8.27,lat:50.0,m:"presse",d:"vers 1450",f:[
+  "Avant, on copiait les livres **à la main**. Il fallait des mois pour faire un seul livre !",
+  "Vers 1450, à Mayence, l'Allemand **Gutenberg** met au point l'**imprimerie**. Il fabrique des petites lettres en métal, que l'on peut déplacer et réutiliser.",
+  "On met de l'encre sur les lettres, on presse une feuille dessus… et la page est imprimée. On peut recommencer des centaines de fois.",
+  "Son premier grand livre est une **Bible**, en latin. Il en imprime environ 180 exemplaires.",
+  "@L Ta leçon donne la date de **1453**. Les historiens disent « vers 1450 » : Gutenberg a travaillé plusieurs années en secret."],
+  j:{t:"presse"}},
+ {id:"constantinople",e:0,n:"Constantinople",c:"Les savants grecs s'enfuient",y:1453,k:"Q",s:"E",lon:28.95,lat:41.0,m:"coupole",d:"1453",f:[
+  "**Constantinople** est une immense ville, à la porte de l'Asie. On y parle **grec** depuis plus de mille ans.",
+  "Dans ses bibliothèques dorment des trésors : les livres des savants et des poètes de la **Grèce antique**.",
+  "En **1453**, la ville est prise par les Turcs ottomans. Des savants grecs partent vers l'**Italie**. Dans leurs bagages : leurs précieux manuscrits !",
+  "@A En Italie, on redécouvre ainsi **Homère**, **Platon**, **Aristote**… On se met à apprendre le grec pour pouvoir les lire."],
+  j:{t:"quiz",q:"Qu'apportent les savants grecs en Italie ?",o:["Des manuscrits de la Grèce antique.","Des canons.","Des coffres remplis d'or."],back:2},v:"florence0"},
+ {id:"athenes",e:0,n:"Athènes",c:"Les Grecs de l'Antiquité",y:1446,k:"Q",s:"E",lon:23.7,lat:37.95,m:"temple",d:"Antiquité",f:[
+  "Remontons le temps : 2 000 ans avant François Ier ! C'est l'**Antiquité**. Voici Athènes, la plus célèbre ville grecque.",
+  "Les **Grecs** inventent le théâtre, la philosophie, les Jeux olympiques. Leurs temples ont des **colonnes** et un toit en triangle : le **fronton**.",
+  "Leurs sculpteurs étudient le **corps humain**. Ils le montrent tel qu'il est, souvent nu, avec de belles proportions.",
+  "Plus tard, les **Romains** admirent les Grecs. Ils copient leurs statues, adoptent leurs dieux et écrivent en **latin**.",
+  "@A Notre mot **alphabet** vient des deux premières lettres grecques : **alpha** et **bêta**. Beaucoup de mots français cachent une racine grecque ou latine."],
+  j:{t:"tri",q:"Une racine ancienne se cache dans ce mot. Que veut-elle dire ?",bacs:["Livre (biblio, en grec)","Terre (géo, en grec)","Eau (aqua, en latin)"],items:[["bibliothèque",0],["géographie",1],["aquarium",2],["Bible",0],["géométrie",1],["aqueduc",2]]},v:"rome0"},
+ {id:"rome0",e:0,n:"Rome",c:"Les ruines de la Rome antique",y:1458,k:"Q",s:"I",lon:12.5,lat:41.9,m:"temple",d:"XVe siècle",f:[
+  "À Rome, les monuments de l'Antiquité sont partout… mais en **ruines**. Des vaches broutent sur l'ancien forum !",
+  "Les artistes italiens viennent les mesurer et les dessiner : colonnes, arcs, **coupoles**.",
+  "@A L'architecte **Brunelleschi** étudie le Panthéon des Romains. Puis il construit à Florence une coupole géante, la plus grande de son temps.",
+  "Des savants cherchent aussi les vieux textes **latins** oubliés dans les monastères. On les appelle les **humanistes**."],
+  j:{t:"tri",q:"D'où cela vient-il ?",bacs:["De l'Antiquité","Nouveauté du XVe siècle"],items:[["Les colonnes et les frontons",0],["Les dieux de la mythologie",0],["L'imprimerie",1],["Les coupoles",0],["La peinture à l'huile",1],["Les statues de corps nus",0]]},l:["vh"]},
+ {id:"florence0",e:0,n:"Florence",c:"Les Médicis, mécènes",y:1469,k:"A",s:"I",lon:11.25,lat:43.77,m:"dome",d:"1469",f:[
+  "Voici **Florence**. C'est ici que naît la **Renaissance**, au XVe siècle.",
+  "@L La Renaissance est un mouvement artistique né en **Italie** au XVe siècle. Il sera rapporté en France par le roi François Ier.",
+  "Renaissance veut dire « naître à nouveau ». Ce qui renaît, c'est la beauté de l'art des **Grecs** et des **Romains**.",
+  "La riche famille **Médicis** dirige la ville. **Laurent le Magnifique** paie les artistes et les savants : c'est un **mécène**.",
+  "@A À Florence, on se réunit pour lire **Platon**, un philosophe grec. On traduit ses livres en latin, pour que toute l'Europe puisse les lire."],
+  j:{t:"quiz",q:"Que veut dire le mot Renaissance ?",o:["Naître à nouveau : la beauté de l'art antique revient.","Le roi vient de naître.","Une nouvelle guerre commence."],back:2},l:["vre"]},
+ {id:"sorbonne",e:0,n:"Paris",c:"Première imprimerie de France",y:1470,k:"L",s:"F",lon:2.35,lat:48.86,m:"ville",d:"1470",f:[
+  "En **1470**, la première imprimerie de France s'installe à Paris, dans le collège de la **Sorbonne**.",
+  "Trois imprimeurs sont venus exprès d'Allemagne. Leurs premiers livres sont en **latin**, pour les étudiants.",
+  "Trois ans plus tard, **Lyon** a aussi son imprimerie. Bientôt, on imprime dans toute la France.",
+  "@I On imprime déjà à Rome et à Venise. Les Italiens inventent de nouvelles formes de lettres, rondes et faciles à lire. Ce sont celles de tes livres !"],
+  j:{t:"quiz",q:"Où s'installe la première imprimerie de France ?",o:["À Paris, à la Sorbonne.","Au château de Chambord.","À Marseille."],back:0},v:"mayence"},
+
+ {id:"amboise1",e:1,n:"Amboise",c:"Charles VIII embellit Amboise",y:1496,k:"A",s:"F",lon:.85,lat:47.35,m:"fort",d:"1495 – 1498",f:[
+  "Le roi **Charles VIII** est né dans ce château d'Amboise, en 1470. Il devient roi à 13 ans.",
+  "En 1494, il part faire la guerre en **Italie**. Là-bas, il découvre des palais et des jardins magnifiques.",
+  "@L Les rois et les seigneurs sont **émerveillés** par la richesse des villes et la splendeur des palais italiens. Rentrés en France, leurs forteresses leur semblent laides et tristes.",
+  "Charles VIII ramène 22 artistes et artisans italiens : sculpteurs, jardiniers, menuisiers… La Renaissance entre en France !",
+  "En 1498, le roi se cogne la tête contre une porte trop basse. Il en meurt, sans enfant vivant."],
+  j:{t:"quiz",q:"Pourquoi Charles VIII veut-il changer son château ?",o:["Il a vu les beaux palais d'Italie.","Son château a brûlé.","Il veut se cacher de ses ennemis."],back:2},v:"naples"},
+ {id:"naples",e:1,n:"Naples",c:"Début des guerres d'Italie",y:1494,k:"G",s:"I",lon:14.25,lat:40.85,m:"bataille",d:"1494 – 1495",f:[
+  "Charles VIII pense que le royaume de **Naples** doit lui appartenir. Il traverse les Alpes avec une grande armée.",
+  "Il entre dans Naples en 1495. Mais les Italiens s'unissent contre lui. Il doit repartir.",
+  "À Naples, il admire les jardins et la bibliothèque du roi. Il fait emporter en France plus de **1 100 livres** !",
+  "C'est le début des **guerres d'Italie**. Elles vont durer plus de 60 ans, avec quatre rois de France."],
+  j:{t:"quiz",q:"Que rapporte Charles VIII d'Italie ?",o:["Des livres, des artistes et le goût de l'art italien.","Un nouveau royaume.","Un troupeau d'éléphants."],back:2}},
+ {id:"florence1",e:1,n:"Florence",c:"Botticelli peint Vénus",y:1485,k:"A",s:"I",lon:11.25,lat:43.77,m:"dome",d:"vers 1485",f:[
+  "Le peintre **Botticelli** travaille pour les Médicis. Vers 1485, il peint *La Naissance de Vénus*.",
+  "@A **Vénus** est la déesse romaine de l'Amour et de la Beauté. Les Grecs l'appelaient **Aphrodite**. Ce n'est pas une scène religieuse : c'est la **mythologie**.",
+  "@L La peinture de la Renaissance est très différente de celle du Moyen Âge. Elle cherche à **ressembler à la réalité** le plus possible.",
+  "Botticelli peint Vénus comme une **statue antique** : debout, nue, avec un corps aux belles proportions."],
+  j:{t:"venus"},apres:"Les historiens pensent que Botticelli a peint ce tableau vers 1485. Ta leçon écrit 1482 : personne ne connaît la date exacte.",l:["va"]},
+ {id:"milan1",e:1,n:"Milan",c:"Léonard peint La Cène",y:1490,k:"A",s:"I",lon:9.19,lat:45.46,m:"ville",d:"1490 – 1498",f:[
+  "À Milan vit un génie : **Léonard de Vinci**. Il est peintre, ingénieur, musicien, architecte…",
+  "De 1495 à 1498, il peint *La Cène* sur le mur d'un couvent. Les personnages semblent vivants.",
+  "Léonard étudie le **corps humain**. Il mesure tout ! Vers 1490, il dessine l'**homme de Vitruve**.",
+  "@A **Vitruve** était un architecte **romain** de l'Antiquité. Il a écrit que le corps d'un homme bien fait entre dans un cercle et dans un carré. Léonard vérifie !",
+  "@L La longueur des bras étendus d'un homme est **égale à sa hauteur**."],
+  j:{t:"vitruve"},apres:"Essaie chez toi avec un mètre : mesure ta taille, puis tes bras étendus. Est-ce presque pareil ?",l:["vi","lv"],v:"florence1"},
+ {id:"venise1",e:1,n:"Venise",c:"Alde Manuce imprime les Grecs",y:1500,k:"L",s:"I",lon:12.33,lat:45.44,m:"venise",d:"1494 – 1501",f:[
+  "**Venise** est une ville bâtie sur l'eau. C'est aussi la capitale des imprimeurs !",
+  "En 1494, **Alde Manuce** y ouvre son atelier. Son rêve : imprimer tous les grands livres des **Grecs** anciens.",
+  "@A Des savants grecs, venus de Constantinople, l'aident à corriger les textes. Dans son atelier, on parle **grec** !",
+  "Alde invente le **livre de poche** : un petit format que l'on peut emporter partout. Il invente aussi l'écriture penchée : l'***italique***.",
+  "@F On imprime surtout à Paris et à Lyon. Les livres d'Alde y arrivent vite… et les imprimeurs de Lyon les copient !"],
+  j:{t:"quiz",q:"Quelle écriture Alde Manuce invente-t-il ?",o:["L'italique, l'écriture penchée.","L'écriture à l'envers.","L'écriture en relief."],back:3},v:"lyon1"},
+ {id:"lyon1",e:1,n:"Lyon",c:"Lyon, ville des imprimeurs",y:1489,k:"L",s:"F",lon:4.83,lat:45.76,m:"ville",d:"vers 1490",f:[
+  "**Lyon** est sur la route de l'Italie. Quatre fois par an, de grandes **foires** attirent des marchands de toute l'Europe.",
+  "Les marchands italiens y apportent de la soie, des épices… et des **idées nouvelles**.",
+  "Vers 1500, Lyon compte des dizaines d'ateliers d'imprimerie. C'est la deuxième ville du livre en France, après Paris.",
+  "@I Venise est alors la plus grande ville d'imprimeurs de toute l'Europe."],
+  j:{t:"quiz",q:"Pourquoi les idées d'Italie arrivent-elles vite à Lyon ?",o:["Lyon est sur la route de l'Italie, avec de grandes foires.","Lyon est au bord de la mer.","Le roi y habite toute l'année."],back:0},v:"venise1"},
+
+ {id:"blois",e:2,n:"Blois",c:"Louis XII et sa bibliothèque",y:1501,k:"P",s:"F",lon:1.33,lat:47.59,m:"chateau",d:"1498 – 1515",f:[
+  "**Louis XII** est né à Blois. Devenu roi, il installe la Cour dans ce château.",
+  "Il fait construire une aile en briques rouges et en pierres blanches. Les fenêtres sont grandes : on n'a plus peur des attaques.",
+  "Son emblème est le **porc-épic**. On le voit sculpté au-dessus de la porte.",
+  "À Blois, le roi rassemble une grande **bibliothèque**. Il y ajoute les livres rapportés d'Italie.",
+  "Il baisse les impôts. Le peuple l'appelle le **« Père du peuple »**."],
+  j:{t:"quiz",q:"Quel animal est l'emblème de Louis XII ?",o:["Le porc-épic.","La salamandre.","Le lion."],back:2},v:"milan2"},
+ {id:"milan2",e:2,n:"Milan",c:"Louis XII prend Milan",y:1499,k:"G",s:"I",lon:9.19,lat:45.46,m:"bataille",d:"1499",f:[
+  "Louis XII veut le duché de **Milan** : sa grand-mère était une princesse de Milan. Il s'en empare en 1499.",
+  "Il admire *La Cène* de Léonard de Vinci. On raconte qu'il aurait voulu emporter le mur en France !",
+  "Le roi fait transporter à Blois la bibliothèque des ducs de Milan : près de **mille livres** précieux.",
+  "@I Léonard quitte Milan. Il part pour Venise, puis retourne à Florence."],
+  j:{t:"quiz",q:"Que rapporte Louis XII de Milan ?",o:["Une bibliothèque de livres précieux.","La Joconde.","Un porc-épic vivant."],back:2}},
+ {id:"florence2",e:2,n:"Florence",c:"Le David et La Joconde",y:1504,k:"A",s:"I",lon:11.25,lat:43.77,m:"dome",d:"1501 – 1506",f:[
+  "À Florence, deux génies travaillent en même temps… et ne s'aiment pas beaucoup !",
+  "**Michel-Ange** sculpte un *David* géant dans un seul bloc de marbre. Il mesure plus de 5 mètres !",
+  "@A Son David est nu et musclé, comme les statues des dieux **grecs**.",
+  "**Léonard de Vinci** commence le portrait d'une dame de Florence : **La Joconde**. Il y travaillera pendant des années.",
+  "@F Un garçon de 10 ans grandit à Amboise. Il s'appelle François. Un jour, il invitera Léonard…"],
+  j:{t:"quiz",q:"Qui sculpte le David ?",o:["Michel-Ange.","Léonard de Vinci.","Botticelli."],back:1},l:["vl"],v:"cognac"},
+ {id:"rome2",e:2,n:"Rome",c:"La Sixtine et L'École d'Athènes",y:1510,k:"A",s:"I",lon:12.5,lat:41.9,m:"temple",d:"1506 – 1512",f:[
+  "À **Rome**, le pape Jules II veut la plus belle ville du monde. Il appelle les meilleurs artistes.",
+  "**Michel-Ange** peint le plafond de la chapelle Sixtine. Il y travaille quatre ans, la tête en l'air !",
+  "**Raphaël** peint *L'École d'Athènes* : tous les grands savants grecs réunis dans un palais. Au centre : **Platon** et **Aristote**.",
+  "@A En 1506, un paysan découvre dans sa vigne une statue antique : le **Laocoon**. Michel-Ange accourt pour la voir. Elle inspire tous les artistes.",
+  "@L Au Moyen Âge, les peintures étaient presque toujours religieuses. On s'intéressait peu au corps humain."],
+  j:{t:"tri",q:"Moyen Âge ou Renaissance ?",bacs:["Moyen Âge","Renaissance"],items:[["Des personnages nus, comme les statues antiques",1],["Presque seulement des sujets religieux",0],["Des corps aux proportions exactes",1],["Des scènes de la mythologie grecque",1],["Peu d'intérêt pour le corps humain",0],["Beaucoup de détails : cheveux, tissus, expressions",1]]},l:["va"]},
+ {id:"cognac",e:2,n:"Cognac",c:"Naissance de François",y:1494,k:"P",s:"F",lon:-.33,lat:45.69,m:"chateau",d:"1494",f:[
+  "Un bébé naît ici en 1494 : **François d'Angoulême**. Il n'est pas fils de roi.",
+  "Son père meurt quand il a 1 an. Sa mère, **Louise de Savoie**, l'élève avec sa grande sœur **Marguerite**.",
+  "Louise aime les livres. Elle fait apprendre à son fils l'italien et l'espagnol. Il adore les romans de chevalerie !",
+  "Le roi Louis XII n'a pas de fils. Il fait venir son jeune cousin François à la Cour, à Amboise.",
+  "En 1514, François épouse **Claude**, la fille du roi. Il a 19 ans."],
+  j:{t:"quiz",q:"Pourquoi François peut-il devenir roi ?",o:["Louis XII n'a pas de fils : François est son cousin et son gendre.","Il gagne un grand tournoi.","Il achète la couronne."],back:3},v:"florence2"},
+
+ {id:"marignan",e:3,n:"Marignan",c:"Victoire de Marignan",y:1515,k:"G",s:"I",lon:9.9,lat:45.55,m:"bataille",d:"1515",f:[
+  "Nous sommes en **1515**. François Ier vient de devenir roi. Il a 20 ans.",
+  "Il traverse les Alpes avec son armée et ses canons. À **Marignan**, il bat les soldats suisses.",
+  "La bataille dure deux jours. François devient le maître de Milan.",
+  "@I Après sa victoire, le jeune roi rencontre le pape à Bologne. Il découvre les chefs-d'œuvre de l'Italie… et rêve de les avoir en France."],
+  j:{t:"quiz",q:"En quelle année a lieu la bataille de Marignan ?",o:["1515","1492","1789"],back:0},l:["qh"]},
+ {id:"amboise3",e:3,n:"Amboise",c:"Léonard de Vinci en France",y:1516,k:"A",s:"F",lon:.85,lat:47.35,m:"chateau",d:"1516 – 1519",f:[
+  "En 1516, François Ier invite **Léonard de Vinci** en France. Léonard a 64 ans.",
+  "Il traverse les Alpes à dos de mulet. Dans ses bagages : **La Joconde** !",
+  "Le roi lui offre un manoir, le Clos Lucé, tout près du château d'Amboise.",
+  "Léonard imagine des machines volantes et des fêtes pour le roi. Il meurt ici en 1519. La Joconde reste en France : elle est aujourd'hui au **Louvre**.",
+  "@I Raphaël décore le palais du pape. Michel-Ange sculpte pour les Médicis. L'Italie est encore le pays des artistes."],
+  j:{t:"quiz",q:"Quel tableau célèbre Léonard apporte-t-il en France ?",o:["La Joconde.","La Naissance de Vénus.","La Cène."],back:1},l:["jo","inv","wd"],v:"florence2"},
+ {id:"chambord",e:3,n:"Chambord",c:"Début du chantier de Chambord",y:1519,k:"A",s:"F",lon:1.75,lat:47.75,m:"chambord",d:"1519",f:[
+  "En 1519, François Ier lance un chantier géant : **Chambord**. Un château pour la chasse… et pour montrer sa puissance.",
+  "@L Le pont-levis est supprimé, les murailles sont percées de grandes fenêtres, les tours abattues. On construit de belles demeures, entourées de jardins.",
+  "Au centre, un escalier **à double hélice** : deux personnes peuvent monter et descendre sans jamais se croiser !",
+  "@A Tout est **symétrique**, avec des colonnes plates sur les murs : ces idées viennent d'Italie, donc de l'Antiquité. Mais les toits pointus restent bien français !",
+  "La **salamandre**, emblème du roi, est sculptée plus de 300 fois."],
+  j:{t:"chateau"},l:["gac","cps"],v:"amboise3"},
+ {id:"pavie",e:3,n:"Pavie",c:"Le roi prisonnier à Pavie",y:1525,k:"G",s:"I",lon:9.0,lat:44.95,m:"bataille",d:"1525",f:[
+  "Le grand rival de François Ier s'appelle **Charles Quint**. Son empire entoure la France.",
+  "En 1525, à **Pavie**, l'armée française est battue. Le roi est fait **prisonnier** !",
+  "Il reste enfermé un an à Madrid. Pour sortir, il doit laisser à sa place ses deux fils aînés, François et Henri, 8 et 6 ans.",
+  "@L Il voulait agrandir le royaume de France, mais **ne parvint pas** à conquérir de nouveaux territoires."],
+  j:{t:"quiz",q:"François Ier a-t-il réussi à garder des terres en Italie ?",o:["Non : il est battu à Pavie et doit y renoncer.","Oui, toute l'Italie.","Oui, le royaume de Naples."],back:3}},
+ {id:"rome3",e:3,n:"Rome",c:"Rome pillée, les artistes s'enfuient",y:1527,k:"A",s:"I",lon:12.5,lat:41.9,m:"temple",d:"1527 – 1541",f:[
+  "En **1527**, l'armée de Charles Quint attaque **Rome** et pille la ville. C'est une catastrophe.",
+  "Beaucoup d'artistes s'enfuient. Certains cherchent un nouveau protecteur… comme le roi de France.",
+  "@F C'est ainsi que le peintre **Rosso** arrive à Fontainebleau en 1530. Le malheur de Rome fait le bonheur de François Ier !",
+  "À Rome, Michel-Ange reprend ses pinceaux. De 1536 à 1541, il peint le *Jugement dernier* : plus de 300 personnages sur un seul mur !"],
+  j:{t:"quiz",q:"Pourquoi des artistes italiens quittent-ils Rome ?",o:["La ville a été pillée en 1527.","Le pape n'aime plus la peinture.","Il y fait trop chaud."],back:0},v:"fontainebleau"},
+ {id:"venise3",e:3,n:"Venise",c:"Titien peint le roi sans le voir",y:1539,k:"A",s:"I",lon:12.33,lat:45.44,m:"venise",d:"vers 1539",f:[
+  "À Venise travaille **Titien**, le peintre des rois et des empereurs.",
+  "Vers 1539, il peint un portrait de **François Ier**. Pourtant, il ne l'a jamais rencontré !",
+  "Il a copié le visage du roi sur une **médaille**. Voilà pourquoi le roi est peint de profil.",
+  "@A Les médailles avec un visage de profil imitent les **pièces de monnaie romaines**, où l'on voyait les empereurs."],
+  j:{t:"quiz",q:"Comment Titien connaît-il le visage du roi ?",o:["Grâce à une médaille.","Il vit à la Cour de France.","Grâce à une photographie."],back:2}},
+ {id:"fontainebleau",e:3,n:"Fontainebleau",c:"Artistes italiens et bibliothèque du roi",y:1533,k:"A",s:"F",lon:2.95,lat:48.2,m:"chateau",d:"1528 – 1547",f:[
+  "**Fontainebleau** est le château préféré du roi. Quand il y va, il dit qu'il rentre « chez lui ».",
+  "Il fait venir des artistes italiens : **Rosso** et **Primatice**. Ils décorent une longue galerie de peintures et de sculptures.",
+  "@A Le roi veut des statues antiques. Primatice va à Rome et rapporte des moulages des plus célèbres, comme le Laocoon. On en fait des copies en bronze.",
+  "@L Durant toute sa vie, François Ier a collectionné les **livres**, écrits à la main ou imprimés, souvent ornés de belles miniatures.",
+  "Il envoie des savants en Italie et en Orient acheter des manuscrits **grecs**. Sa bibliothèque en compte bientôt des centaines.",
+  "En 1537, il décide qu'un exemplaire de chaque livre imprimé en France sera donné à sa bibliothèque. Cette règle existe toujours !"],
+  j:{t:"tri",q:"Où cela se passe-t-il ?",bacs:["En France","En Italie"],items:[["Michel-Ange peint la chapelle Sixtine",1],["On construit le château de Chambord",0],["Botticelli peint La Naissance de Vénus",1],["Le roi crée une grande bibliothèque à Fontainebleau",0],["Alde Manuce invente le livre de poche",1],["Léonard de Vinci finit sa vie au Clos Lucé",0]]},v:"rome3"},
+ {id:"college",e:3,n:"Paris · Collège",c:"Création du Collège de France",y:1530,k:"L",s:"F",lon:1.95,lat:49.1,m:"ville",d:"1530",f:[
+  "Un grand savant conseille le roi : **Guillaume Budé**. Il lit le grec aussi bien que le français !",
+  "@A Pour les **humanistes**, il faut lire les textes anciens dans leur vraie langue : le **latin**, le **grec** et l'**hébreu**.",
+  "@L En **1530**, François Ier crée à Paris le **Collège de France**, où des gens très savants enseignent les langues anciennes et toutes les sciences.",
+  "Les cours sont gratuits et ouverts à tous. C'est encore vrai aujourd'hui !",
+  "Le roi a même invité **Érasme**, l'humaniste le plus célèbre d'Europe. Mais Érasme a préféré garder sa liberté."],
+  j:{t:"quiz",q:"Qu'enseigne-t-on d'abord au Collège de France ?",o:["Les langues anciennes, comme le grec et l'hébreu.","L'escrime et la chasse.","La cuisine italienne."],back:2},l:["vh","vf"],v:"constantinople"},
+ {id:"imprimeurs",e:3,n:"Paris · Imprimeurs",c:"Les imprimeurs du roi",y:1541,k:"L",s:"F",lon:2.75,lat:48.82,m:"presse",d:"1539 – 1544",f:[
+  "@L François Ier favorise le développement de l'**imprimerie**, mise au point par l'Allemand Gutenberg.",
+  "Il choisit des **imprimeurs du roi**, comme **Robert Estienne**. Estienne imprime de gros dictionnaires de latin et de français.",
+  "@A Le roi veut de beaux livres en grec. Il commande à **Claude Garamond** de nouvelles lettres grecques : les « Grecs du roi ».",
+  "Les lettres dessinées par **Garamond** sont si élégantes qu'on les utilise encore. Cherche « Garamond » dans les polices de ton ordinateur !",
+  "@I À Venise, le fils d'Alde Manuce continue le travail de son père."],
+  j:{t:"quiz",q:"Qui dessine les lettres appelées « Grecs du roi » ?",o:["Claude Garamond.","Gutenberg.","Léonard de Vinci."],back:2},v:"venise1"},
+ {id:"villers",e:3,n:"Villers-Cotterêts",c:"Le français, langue officielle",y:1539,k:"P",s:"F",lon:3.35,lat:49.55,m:"chateau",d:"1539",f:[
+  "@L François Ier veut que le roi ait un **réel pouvoir**. Il se fait aider par des conseillers, mais décide **seul** d'augmenter les impôts, sans réunir les **états généraux**.",
+  "Autour de lui vit **la Cour**. Un ambassadeur de Venise écrit en 1546 que le roi est « le maître absolu ».",
+  "Dans ce château, en **1539**, il signe une ordonnance très importante.",
+  "Désormais, les textes officiels et les jugements seront écrits en **français**, et plus en latin. Tout le monde doit pouvoir comprendre.",
+  "@L Ses ordres se terminent par : **« Car tel est notre bon plaisir »**. Cela veut dire : telle est notre volonté."],
+  j:{t:"quiz",q:"Depuis 1539, dans quelle langue écrit-on les textes officiels ?",o:["En français.","En latin.","En italien."],back:3},l:["vf"]},
+ {id:"chinon",e:3,n:"Chinon",c:"Rabelais écrit Gargantua",y:1534,k:"L",s:"F",lon:.1,lat:47.0,m:"livre",d:"1532 – 1534",f:[
+  "Près de Chinon naît **François Rabelais**. Il est moine, puis médecin… et écrivain.",
+  "@L Rabelais raconte avec verve les aventures des géants : *Gargantua* et *Pantagruel*.",
+  "Ses livres sont imprimés à **Lyon**. Ils font rire. Mais ils font aussi réfléchir : comment bien apprendre ? Comment éviter la guerre ?",
+  "@A Dans le livre, le géant Gargantua écrit à son fils : apprends le **grec**, le **latin** et l'hébreu, et lis tous les bons livres ! C'est le programme des humanistes.",
+  "Aujourd'hui encore, on dit un repas « **gargantuesque** » pour parler d'un repas énorme !"],
+  j:{t:"tri",q:"Rabelais l'a-t-il vraiment écrit ?",bacs:["C'est dans le livre","C'est inventé"],items:[["Gargantua naît par l'oreille de sa mère.",0],["Bébé, il crie : « À boire ! À boire ! »",0],["Il construit une fusée pour aller sur la Lune.",1],["Il emporte les cloches de Notre-Dame pour sa jument.",0],["Il joue au football contre Charles Quint.",1],["Il avale six pèlerins dans sa salade, sans le faire exprès.",0]]},l:["vg","vr"]},
+ {id:"stmalo",e:3,n:"Saint-Malo",c:"Jacques Cartier part au Canada",y:1535,k:"M",s:"F",lon:-2.0,lat:48.65,m:"bateau",d:"1534",f:[
+  "@L François Ier s'intéresse à l'Amérique. Il **encourage les explorations**, dont celles de Jacques Cartier au Canada.",
+  "En **1534**, le marin **Jacques Cartier** part de Saint-Malo avec deux navires. Vingt jours plus tard, il atteint Terre-Neuve.",
+  "L'année suivante, il remonte un immense fleuve, le Saint-Laurent. Il appelle ce pays **Canada**, d'un mot iroquoien qui veut dire « village ».",
+  "Il rapporte de l'or et des diamants… qui sont en fait de simples cailloux !"],
+  j:{t:"quiz",q:"Qu'est-ce qu'une exploration ?",o:["Un voyage pour découvrir une région que l'on ne connaît pas.","Une guerre contre un pays voisin.","Une grande fête à la Cour."],back:0},l:["vc"]},
+ {id:"vannes",e:3,n:"Vannes",c:"Bretagne et Auvergne au roi",y:1531,k:"P",s:"F",lon:-2.76,lat:47.66,m:"fort",d:"1531 – 1532",f:[
+  "En **1532**, à Vannes, les Bretons acceptent que la **Bretagne** soit unie pour toujours à la France. La reine Claude en était la duchesse.",
+  "Un an plus tôt, le roi a pris l'**Auvergne**. Elle appartenait au duc de Bourbon, le chef de son armée, qui l'avait trahi.",
+  "@L Le roi gagne de nouvelles terres pour le **domaine royal** sans en perdre aucune."],
+  j:{t:"quiz",q:"Quelles régions entrent dans le domaine royal sous François Ier ?",o:["L'Auvergne et la Bretagne.","L'Italie et l'Espagne.","La Normandie et le Languedoc."],back:0}},
+
+ {id:"chenonceau",e:4,n:"Chenonceau",c:"Le château des Dames",y:1547,k:"A",s:"F",lon:1.15,lat:47.25,m:"pont",d:"1547",f:[
+  "**Henri II** offre ce château à son amie **Diane de Poitiers**.",
+  "Diane fait construire un **pont** sur la rivière, le Cher. Plus tard, la reine **Catherine de Médicis** y ajoutera une galerie.",
+  "Résultat : un château posé **sur l'eau**. On l'appelle le « château des Dames ».",
+  "@I Catherine de Médicis vient de **Florence**. Elle apporte à la Cour le goût des fêtes, des jardins et des artistes italiens."],
+  j:{t:"quiz",q:"Sur quoi est construit Chenonceau ?",o:["Sur un pont, au-dessus d'une rivière.","Au sommet d'une montagne.","Sur une île, en mer."],back:1},l:["vch"]},
+ {id:"louvre",e:4,n:"Paris · Louvre",c:"Le nouveau Louvre",y:1551,k:"A",s:"F",lon:2.1,lat:49.0,m:"palais",d:"1546 – 1556",f:[
+  "À Paris, le vieux château fort du **Louvre** est démoli. L'architecte **Pierre Lescot** construit à la place un palais moderne.",
+  "@A Sa façade a des **colonnes** et des **frontons**, comme un temple antique.",
+  "Le sculpteur **Jean Goujon** y sculpte quatre **cariatides** : des statues de femmes qui servent de colonnes.",
+  "@A Les cariatides viennent de Grèce. On en voit sur un temple d'**Athènes**, vieux de 2 000 ans.",
+  "@I À Rome, Michel-Ange a plus de 70 ans. Il dessine la coupole géante de la basilique Saint-Pierre."],
+  j:{t:"quiz",q:"Qu'est-ce qu'une cariatide ?",o:["Une statue de femme qui sert de colonne.","Une arme de chevalier.","Une danse italienne."],back:2},v:"athenes"},
+ {id:"ronsard",e:4,n:"Vendôme",c:"Ronsard et la Pléiade",y:1554,k:"L",s:"F",lon:.65,lat:47.95,m:"livre",d:"1550",f:[
+  "**Pierre de Ronsard** naît près de Vendôme en 1524. Enfant, il est page à la Cour, au service des fils de François Ier.",
+  "Une maladie le rend presque sourd. Il ne peut plus devenir soldat. Alors il choisit la **poésie**.",
+  "@L Les poètes Ronsard et Du Bellay **s'inspirent des écrivains grecs et latins**. Ils chantent les beautés de la nature et la joie de vivre.",
+  "@A Ronsard imite le Grec **Pindare** et le Romain **Horace**. Même le nom de son groupe de poètes, **la Pléiade**, vient de sept poètes grecs de l'Antiquité.",
+  "Son poème le plus connu parle d'une **rose** qui ne dure qu'un jour."],
+  j:{t:"quiz",q:"Trouve la rime. « Mignonne, allons voir si la rose / Qui ce matin avait… »",o:["déclose (cela veut dire : ouverte)","fleurie","poussé"],back:4},l:["vro"]},
+ {id:"dubellay",e:4,n:"Liré",c:"Du Bellay défend le français",y:1549,k:"L",s:"F",lon:-1.16,lat:47.34,m:"livre",d:"1549",f:[
+  "**Joachim du Bellay** naît à Liré, en Anjou. C'est l'ami de Ronsard.",
+  "En 1549, il écrit un livre pour dire : le **français** est une belle langue ! On peut écrire de grands poèmes en français, pas seulement en latin.",
+  "@A Son idée : faire en français ce que les Grecs et les Romains ont fait dans leur langue. Imiter les Anciens… pour les égaler !",
+  "Les poètes de la Pléiade inventent même des mots nouveaux, à partir du grec et du latin."],
+  j:{t:"quiz",q:"Que défend Du Bellay dans son livre de 1549 ?",o:["La langue française.","Le latin pour tout le monde.","La chasse à courre."],back:1},v:"rome4"},
+ {id:"rome4",e:4,n:"Rome",c:"Du Bellay à Rome",y:1556,k:"L",s:"I",lon:12.5,lat:41.9,m:"temple",d:"1553 – 1557",f:[
+  "En 1553, **Du Bellay** part à Rome. Il est le secrétaire de son cousin, un cardinal.",
+  "Il se promène dans les **ruines** de la Rome antique. Elles le font rêver… et le rendent triste : même les plus grandes villes finissent en poussière.",
+  "Son village d'Anjou lui manque. Il l'écrit dans un poème célèbre : *Heureux qui, comme Ulysse…*",
+  "@A **Ulysse** est le héros de *L'Odyssée*, un très vieux poème grec d'**Homère**. Après la guerre de Troie, il met dix ans à rentrer chez lui !"],
+  j:{t:"quiz",q:"Qui est Ulysse ?",o:["Un héros grec qui met dix ans à rentrer chez lui.","Un roi de France.","Un peintre italien."],back:3},v:"dubellay"},
+ {id:"florence4",e:4,n:"Florence",c:"Vasari invente le mot Renaissance",y:1550,k:"A",s:"I",lon:11.25,lat:43.77,m:"dome",d:"1550",f:[
+  "À Florence, le peintre **Giorgio Vasari** a une idée : raconter la vie des grands artistes italiens.",
+  "Son livre paraît en **1550**. On y lit les histoires de Léonard, de Raphaël, de Michel-Ange…",
+  "Pour parler de leur époque, Vasari emploie un mot italien : ***rinascita***. En français : **Renaissance** !",
+  "@L Le XVIe siècle est appelé la **Renaissance** car, pour les hommes de ce temps, la beauté, comme l'avaient réalisée les anciens Grecs et Romains, renaît et produit des œuvres merveilleuses."],
+  j:{t:"quiz",q:"Qui emploie le mot « Renaissance » pour parler des artistes ?",o:["Vasari.","Charles Quint.","Gutenberg."],back:2},l:["vre"]},
+ {id:"montaigne",e:4,n:"Montaigne",c:"Montaigne, élevé en latin",y:1533,k:"L",s:"F",lon:.03,lat:44.88,m:"tour",d:"1533 – 1592",f:[
+  "**Michel de Montaigne** naît ici en 1533. Son père a une drôle d'idée : on ne lui parle qu'en **latin** ! C'est sa première langue.",
+  "Chaque matin, on le réveille doucement, **en musique**.",
+  "Adulte, il s'installe dans une tour ronde, pleine de livres. C'est là qu'il réfléchit et qu'il écrit.",
+  "@A Sur les poutres du plafond, il fait peindre ses phrases préférées, en **grec** et en **latin**. Il cite sans cesse les auteurs anciens.",
+  "@L Montaigne, dans les *Essais*, fait part des réflexions que lui suggèrent ses lectures et ses voyages. Sa devise : **« Que sais-je ? »**"],
+  j:{t:"tri",q:"Qui a écrit quoi ?",bacs:["Rabelais","Ronsard","Du Bellay","Montaigne"],items:[["Gargantua",0],["Les Essais",3],["Le poème de la rose",1],["Heureux qui, comme Ulysse…",2],["Pantagruel",0],["« Que sais-je ? »",3]]},apres:"Les Essais sont publiés en 1580, un peu après notre histoire.",l:["vm"]},
+ {id:"calais",e:4,n:"Calais",c:"Calais, Metz, Toul et Verdun",y:1558,k:"G",s:"F",lon:1.86,lat:50.95,m:"fort",d:"1552 – 1559",f:[
+  "Henri II continue la guerre contre Charles Quint. En 1552, il prend trois villes de l'Est : **Metz, Toul et Verdun**.",
+  "Depuis plus de 200 ans, **Calais** appartient aux Anglais ! En janvier 1558, l'armée française la reprend en quelques jours.",
+  "En 1559, la paix est signée. La France renonce à l'Italie : les **guerres d'Italie** sont finies.",
+  "@I Pendant 65 ans, les soldats français ont traversé les Alpes. Ils n'ont pas gardé de terres. Mais ils ont rapporté la Renaissance."],
+  j:{t:"quiz",q:"À qui appartenait Calais avant 1558 ?",o:["Aux Anglais.","Aux Italiens.","Aux Espagnols."],back:1}},
+ {id:"tournoi",e:4,n:"Paris · Tournoi",c:"Mort d'Henri II",y:1559,k:"P",s:"F",lon:2.95,lat:48.6,m:"tente",d:"1559",f:[
+  "Été 1559. Pour fêter la paix, le roi organise un grand **tournoi** à Paris.",
+  "Henri II adore les joutes à cheval. Mais la lance de son adversaire se brise. Un éclat le blesse gravement à l'œil.",
+  "Malgré les meilleurs médecins, le roi meurt dix jours plus tard.",
+  "Trois de ses fils seront rois : **François II, Charles IX et Henri III**. Leur mère, Catherine de Médicis, les aidera à gouverner."],
+  j:{t:"quiz",q:"Combien de fils d'Henri II deviendront rois ?",o:["Trois.","Un seul.","Aucun."],back:3}}
+];
+const SALAMANDRES=[
+ {id:"a1",e:0,lon:9.6,lat:51.0,t:"Un copiste mettait environ **trois ans** pour copier une Bible entière à la main. Avec sa presse, Gutenberg en imprime 180 dans le même temps."},
+ {id:"a2",e:0,lon:5.2,lat:47.6,t:"Le **papier** a été inventé en Chine. Il est arrivé en Europe grâce aux Arabes. Sans papier, pas d'imprimerie !"},
+ {id:"a3",e:0,lon:13.7,lat:42.75,t:"Les Romains écrivaient les nombres avec des lettres : **XVI** veut dire 16. On s'en sert encore pour les siècles et pour les rois : François I**er**, **XVIe** siècle."},
+ {id:"a4",e:0,lon:1.6,lat:46.3,t:"Le roi **Louis XI** crée la poste royale : des cavaliers changent de cheval à chaque relais pour porter très vite les lettres du roi."},
+ {id:"s1",e:1,lon:6.5,lat:44.95,t:"Pour aller en Italie, l'armée du roi doit traverser les **Alpes** avec ses canons. Quelle escalade !"},
+ {id:"s2",e:1,lon:8.95,lat:44.62,t:"**Christophe Colomb** est né à Gênes, en Italie. En **1492**, il arrive en Amérique. Sur ta frise, c'est le début des **Temps modernes**."},
+ {id:"s3",e:1,lon:2.2,lat:43.9,t:"Le sport préféré des rois s'appelle le **jeu de paume**. C'est l'ancêtre du tennis : au début, on frappait la balle avec la main !"},
+ {id:"s4",e:2,lon:6.95,lat:48.28,t:"En 1507, une carte du monde donne pour la première fois un nom au nouveau continent : **America**. Elle est imprimée à Saint-Dié, dans les Vosges !"},
+ {id:"s5",e:2,lon:.3,lat:49.2,t:"Vers 1500, la France compte environ **16 millions** d'habitants. Presque tous sont des paysans."},
+ {id:"s6",e:2,lon:9.15,lat:42.2,t:"La **Corse** n'est pas française à cette époque ! Elle appartient à la ville italienne de Gênes."},
+ {id:"s7",e:3,lon:2.2,lat:50.5,t:"En 1520, François Ier rencontre le roi d'Angleterre près de Calais. Les tentes sont tissées de fils d'or : c'est le **Camp du Drap d'Or**."},
+ {id:"s8",e:3,lon:.4,lat:49.55,t:"En 1517, François Ier fait construire un nouveau port à l'embouchure de la Seine : **Le Havre**."},
+ {id:"s9",e:3,lon:1.4,lat:43.7,t:"La **salamandre** est l'emblème de François Ier. On croyait qu'elle pouvait vivre dans le feu ! Sa devise, en latin, veut dire : « Je nourris le bon feu et j'éteins le mauvais. »"},
+ {id:"s10",e:3,lon:5.3,lat:43.6,t:"En 1516, un **rhinocéros** venu d'Inde fait escale sur une île près de Marseille. Le roi vient exprès pour le voir !"},
+ {id:"s11",e:3,lon:-.4,lat:44.3,t:"François Ier est un géant pour son époque : il mesure près de **2 mètres** !"},
+ {id:"s12",e:4,lon:4.3,lat:47.2,t:"La reine **Catherine de Médicis** vient de Florence. On raconte qu'elle fait découvrir la **fourchette** à la Cour de France."},
+ {id:"s13",e:4,lon:-.75,lat:48.2,t:"**Ambroise Paré**, le chirurgien d'Henri II, invente de nouvelles façons de soigner les blessés. On l'appelle le père de la chirurgie moderne."},
+ {id:"s14",e:4,lon:3.0,lat:45.5,t:"Henri II et Catherine de Médicis ont **dix enfants**. Trois deviendront rois de France !"}
+];
+const LEXIQUE=[
+ ["La Cour","les personnes qui vivent dans l'entourage d'un roi."],
+ ["Les états généraux","la réunion des représentants des Français, convoqués par le roi."],
+ ["Une exploration","un voyage pour découvrir et étudier une région que l'on ne connaît pas."],
+ ["Les nobles","les descendants des seigneurs."],
+ ["L'Antiquité","la période des Grecs et des Romains, bien avant le Moyen Âge."],
+ ["La Renaissance","un mouvement artistique né en Italie au XVe siècle. Les artistes s'inspirent de l'Antiquité."],
+ ["Un humaniste","un savant de la Renaissance qui étudie les textes des Grecs et des Romains."],
+ ["Un manuscrit","un livre écrit à la main."],
+ ["L'imprimerie","la technique qui permet de fabriquer un livre en beaucoup d'exemplaires."],
+ ["Un mécène","une personne riche qui aide les artistes à créer."],
+ ["La mythologie","les histoires des dieux et des héros de l'Antiquité."],
+ ["Le dauphin","le fils aîné du roi, qui deviendra roi à son tour."],
+ ["Le domaine royal","les terres qui appartiennent directement au roi."],
+ ["Une ordonnance, un édit","une loi décidée par le roi."],
+ ["Un emblème","un dessin qui représente une personne : la salamandre pour François Ier."]
+];
+const ARBRE=[
+ ["c5","Charles V","le Sage","roi 1364–1380",450,40,1,0,"Roi savant, il crée une grande bibliothèque au Louvre. Toute la famille des Valois descend de lui."],
+ ["c6","Charles VI","","roi 1380–1422",150,150,1,0,"Fils aîné de Charles V. Son règne se passe pendant la guerre de Cent Ans."],
+ ["lo","Louis d'Orléans","frère du roi","1372–1407",600,150,0,0,"Deuxième fils de Charles V. Ses descendants forment deux branches : Orléans et Angoulême."],
+ ["c7","Charles VII","","roi 1422–1461",150,260,1,0,"C'est le roi aidé par Jeanne d'Arc."],
+ ["co","Charles d'Orléans","le prince poète","1394–1465",450,260,0,0,"Prisonnier des Anglais pendant 25 ans, il écrit des poèmes. C'est le père de Louis XII."],
+ ["ja","Jean d'Angoulême","","1399–1467",750,260,0,0,"Grand amateur de livres. C'est le grand-père de François Ier."],
+ ["l11","Louis XI","","roi 1461–1483",150,370,1,0,"Il agrandit beaucoup le domaine royal. C'est le père de Charles VIII."],
+ ["l12","Louis XII","Père du peuple","roi 1498–1515",450,370,1,0,"Cousin de Charles VIII. Il n'a pas de fils, mais une fille : Claude."],
+ ["ca","Charles d'Angoulême","","1459–1496",750,370,0,1,"Le père de François Ier. Il meurt quand son fils a 1 an."],
+ ["ls","Louise de Savoie","","1476–1531",920,370,0,1,"La mère de François Ier. Elle gouverne le royaume quand son fils est prisonnier."],
+ ["c8","Charles VIII","","roi 1483–1498",150,490,1,0,"Il lance les guerres d'Italie. Il meurt sans enfant vivant : la couronne passe à son cousin."],
+ ["an","Anne de Bretagne","duchesse","1477–1514",300,490,0,0,"Duchesse de Bretagne. Elle épouse Charles VIII, puis Louis XII : deux fois reine de France !"],
+ ["cl","Claude de France","reine","1499–1524",450,490,0,1,"Fille de Louis XII et d'Anne de Bretagne. Elle épouse François Ier et lui apporte la Bretagne. La prune reine-claude porte son nom !"],
+ ["f1","François Ier","","roi 1515–1547",700,490,1,1,"Cousin et gendre de Louis XII. Le roi de la Renaissance, protecteur des arts et des lettres."],
+ ["mg","Marguerite","de Navarre","1492–1549",900,490,0,2,"La grande sœur de François Ier. Elle écrit des livres et protège les écrivains, comme Rabelais."],
+ ["df","François","le dauphin","1518–1536",380,610,0,2,"Le fils aîné. Sur la miniature de ta leçon, c'est le dauphin. Il meurt à 18 ans, avant son père."],
+ ["h2","Henri II","","roi 1547–1559",560,610,1,2,"Deuxième fils de François Ier. Il devient roi parce que son grand frère est mort."],
+ ["cm","Catherine","de Médicis","1519–1589",740,610,0,3,"Née à Florence, dans la famille des Médicis. Reine de France, puis mère de trois rois."],
+ ["ch","Charles","","1522–1545",910,610,0,2,"Le troisième fils de François Ier. Tu le vois aussi sur la miniature de ta leçon."],
+ ["f2","François II","","roi 1559–1560",410,730,1,3,"Roi à 15 ans, il meurt l'année suivante."],
+ ["c9","Charles IX","","roi 1560–1574",650,730,1,3,"Roi à 10 ans. Sa mère Catherine gouverne pour lui."],
+ ["h3","Henri III","","roi 1574–1589",890,730,1,3,"Le dernier roi de la famille des Valois."]
+];
+const TRAITS=[ /* [chemin, époque, mariage?] */
+ ["M450 94V122M150 122H600M150 122V150M600 122V150",0],["M150 204V260",0],["M150 314V370",0],["M150 424V490",0],
+ ["M600 204V232M450 232H750M450 232V260M750 232V260",0],["M450 314V370",0],["M750 314V370",1],
+ ["M220 517H230",0,1],["M300 490V397H380",0,1],["M450 424V490",1],
+ ["M820 397H850",1,1],["M750 424V455H700V490",1],["M750 455H900V490",2],
+ ["M520 517H630",1,1],["M575 517V575M380 575H910M380 575V610M560 575V610M910 575V610",2],
+ ["M630 637H670",3,1],["M650 637V695M410 695H890M410 695V730M650 695V730M890 695V730",3]
+];
+
+{const ea={c5:0,c6:0,lo:0,c7:0,co:0,ja:0,l11:0,c8:0,l12:1,an:1,ca:2,ls:2,cl:2,f1:2,mg:3,df:3,h2:3,ch:3,cm:4,f2:4,c9:4,h3:4};ARBRE.forEach(n=>n[7]=ea[n[0]]);
+ [0,0,0,0,0,1,2,1,2,2,2,2,3,2,3,4,4].forEach((e,i)=>TRAITS[i][1]=e)}
+const ROIS_FRISE=[["Charles VII",1445,1461],["Louis XI",1461,1483],["Charles VIII",1483,1498],["Louis XII",1498,1515],["François Ier",1515,1547],["Henri II",1547,1559]];
+
+/* ============ ÉTAT ============ */
+const CLE="salamandre-v3",SEUIL=3,vide=()=>({ep:0,max:0,lieux:{},sal:{},intro:{},fini:false,pas:{},vu:{},ant:{},tard:{},seuil:{}});
+let BASE={joueurs:[],actif:-1,tempo:1},S=vide(),memoireOk=true;
+try{const b=JSON.parse(localStorage.getItem(CLE)||"null");if(b&&Array.isArray(b.joueurs))BASE=Object.assign(BASE,b)}catch(e){memoireOk=false}
+BASE.actif=-1;
+const sauve=()=>{if(BASE.joueurs[BASE.actif])BASE.joueurs[BASE.actif].S=S;try{localStorage.setItem(CLE,JSON.stringify(BASE))}catch(e){memoireOk=false}};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+const propre=t=>String(t).replace(/[-<>&"'|]/g," ").replace(/\s+/g," ").trim().slice(0,14);
+const mots=t=>brut(t).split(/\s+/).length;
+function attendre(b,ms,texte){ms=Math.round(ms*BASE.tempo);if(!b||ms<=0)return;b.disabled=true;b.style.setProperty("--t",ms+"ms");b.textContent="Lis bien d'abord…";
+  setTimeout(()=>{if(b.isConnected){b.disabled=false;b.textContent=texte}},ms)}
+const pret=e=>lieuxDe(e).filter(l=>S.lieux[l.id]).length>=Math.min(SEUIL,lieuxDe(e).length);
+const $=s=>document.querySelector(s);
+const fmt=t=>t.replace(/\*\*\*(.+?)\*\*\*/g,"<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
+const brut=t=>t.replace(/\*/g,"");
+const melange=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const lieuxDe=e=>LIEUX.filter(l=>l.e===e), salDe=e=>SALAMANDRES.filter(s=>s.e===e), lieu=id=>LIEUX.find(l=>l.id===id);
+const fiche=t=>{const m=t.match(/^@([AIFL]) /);return m?{e:m[1],t:t.slice(3)}:{t}};
+const parle="speechSynthesis" in window;
+function dire(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(brut(t));u.lang="fr-FR";u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+function chut(){try{speechSynthesis.cancel()}catch(e){}}
+let toastT;function toast(t,ms=4200){const el=$("#toast");el.innerHTML=fmt(t);el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,ms)}
+const epoqueFinie=e=>lieuxDe(e).every(l=>S.lieux[l.id]);
+
+/* ============ CARTE 3D ============ */
+const CX=Math.cos(45*Math.PI/180),LON0=3.2,LAT0=46.4;
+const X=lon=>(lon-LON0)*CX, Z=lat=>-(lat-LAT0);
+const NO=[[2.4,51.05],[1.85,50.95],[1.6,50.7],[1.55,50.2],[1.08,49.93],[.1,49.5],[-.4,49.3],[-1.1,49.35],[-1.27,49.7],[-1.65,49.65],[-1.95,49.7],[-1.8,49.35],[-1.6,48.83],[-1.5,48.63],[-2.0,48.65],[-2.3,48.68],[-2.75,48.52],[-3.05,48.8],[-3.45,48.83],[-4.0,48.72],[-4.75,48.45],[-4.3,48.3],[-4.55,48.22],[-4.73,48.04],[-4.37,47.8],[-3.9,47.85],[-3.37,47.72],[-3.1,47.5],[-2.75,47.55],[-2.5,47.3],[-2.2,47.27],[-2.1,47.1],[-2.3,46.95],[-1.8,46.5],[-1.15,46.15],[-1.05,45.62],[-1.15,45.55],[-1.25,44.65],[-1.45,43.65],[-1.78,43.37]];
+const PYR=[[-1.4,43.05],[-.7,42.9],[0,42.7],[.7,42.75],[1.45,42.6],[1.75,42.5],[2.2,42.4],[3.17,42.43]];
+const ESP=[[-3.0,43.42],[-5.5,43.55],[-8.0,43.7],[-9.2,43.1],[-8.8,42.1],[-8.7,40.9],[-9.4,38.7],[-8.9,37.0],[-7.4,37.2],[-6.3,36.6],[-5.35,36.05],[-4.4,36.7],[-2.2,36.75],[-.7,37.6],[.2,38.75],[-.3,39.5],[.2,40.2],[.9,40.75],[1.3,41.1],[2.2,41.35],[3.2,41.9],[3.3,42.3],[3.17,42.43]];
+const MED=[[3.04,42.7],[3.05,43.0],[3.25,43.25],[3.5,43.28],[3.7,43.4],[4.2,43.47],[4.6,43.37],[4.85,43.4],[5.35,43.3],[5.93,43.1],[6.15,43.03],[6.65,43.2],[7.0,43.55],[7.27,43.7],[7.5,43.78]];
+const ITA=[[8.2,43.95],[8.9,44.4],[9.8,44.05],[10.3,43.5],[10.5,42.95],[11.1,42.4],[11.8,42.1],[12.3,41.7],[13.0,41.25],[13.9,40.95],[14.3,40.8],[14.5,40.6],[15.0,40.2],[15.6,40.0],[15.8,39.5],[16.1,39.0],[15.9,38.6],[15.65,38.0],[16.1,37.95],[16.55,38.4],[17.1,38.9],[17.1,39.3],[16.5,39.7],[16.9,40.45],[17.9,40.3],[18.5,40.1],[18.0,40.65],[17.0,41.05],[16.0,41.45],[16.2,41.9],[15.2,41.9],[14.7,42.1],[14.2,42.5],[13.6,43.5],[12.6,43.95],[12.3,44.3],[12.4,44.9],[12.3,45.4],[13.1,45.7],[13.75,45.65]];
+const BALK=[[13.6,45.1],[14.3,45.2],[15.2,44.2],[16.4,43.5],[18.1,42.65],[19.4,41.8],[19.4,40.5],[20.0,39.7],[20.7,38.9],[21.1,38.35],[21.3,37.7],[21.7,36.8],[22.4,36.5],[23.1,36.5],[23.2,37.3],[23.0,37.9],[23.7,37.95],[24.05,37.7],[24.0,38.2],[23.3,38.6],[22.9,39.3],[22.6,40.0],[22.9,40.6],[23.9,40.2],[24.4,40.9],[26.0,40.85],[26.1,40.6],[27.3,40.95],[28.95,41.02],[29.1,41.25],[28.0,42.0],[27.9,43.2],[28.6,44.0],[29.6,45.2],[31.5,45.5]];
+const CONTINENT=NO.concat(ESP,MED,ITA,BALK,[[31.5,54.4],[8.6,54.4],[8.9,53.9],[8.0,53.7],[6.5,53.5],[4.75,52.9],[4.2,52.1],[3.4,51.4],[2.9,51.2]]);
+const ITALIE=[[7.5,43.78]].concat(ITA,[[13.5,46.5],[12.2,46.9],[10.5,46.85],[9.3,46.4],[8.4,46.4],[7.9,45.95],[7.0,45.9],[7.05,45.2],[6.95,44.8],[6.9,44.3],[7.15,43.9]]);
+const ROYAUME=[[1.75,50.85]].concat(NO.slice(2),PYR.slice(0,6),[[2.2,42.75],[3.0,42.9]],MED.slice(1,13),[[7.2,43.65],[7.15,43.9],[6.9,44.3],[6.95,44.8],[6.6,45.1],[6.0,45.4],[5.6,45.65],[5.2,45.75],[4.9,46.1],[4.95,46.5],[5.3,46.9],[5.45,47.3],[5.6,47.7],[5.7,48.0],[5.6,48.4],[5.3,48.9],[5.1,49.4],[4.9,49.75],[4.3,49.95],[3.5,50.05],[2.9,50.1],[2.4,50.35],[2.0,50.6]]);
+const BRETAGNE=NO.slice(13,32).concat([[-1.4,47.05],[-1.1,47.35],[-1.05,47.8],[-1.1,48.3]]);
+const AUVERGNE=[[2.3,46.75],[3.0,46.8],[3.75,46.55],[3.95,46.1],[3.85,45.5],[3.9,45.0],[3.2,44.85],[2.5,44.9],[2.15,45.3],[2.45,45.9],[2.2,46.3]];
+const ILES=[[[9.4,43.0],[9.55,42.2],[9.2,41.4],[8.6,41.9],[8.6,42.5],[9.3,42.7]],[[12.45,37.8],[13.3,38.2],[15.6,38.25],[15.1,37.3],[15.1,36.7],[14.3,37.0],[12.5,37.55]],[[8.2,40.9],[9.2,41.25],[9.8,40.5],[9.6,39.2],[8.9,38.9],[8.4,39.3],[8.4,40.4]]];
+const CRETE=[[23.5,35.5],[26.3,35.2],[26.2,35.0],[23.6,35.25]];
+const ANATOLIE=[[26.2,39.6],[26.7,40.35],[27.5,40.4],[29.0,40.45],[29.3,40.95],[31.5,41.15],[31.5,36.2],[28.0,36.6],[27.3,37.0],[26.3,38.3],[26.8,39.4]];
+const AFRIQUE=[[-6.0,35.8],[-5.4,35.9],[-3.0,35.3],[0,35.8],[3.0,36.9],[5.0,36.75],[7.5,37.0],[9.8,37.3],[11.0,37.0],[10.6,36.4],[11.1,35.0],[11.1,34.3],[-6.0,34.3]];
+const ANGLETERRE=[[-5.6,50.05],[-4.2,50.3],[-3.4,50.6],[-2.0,50.6],[-1.0,50.75],[.3,50.75],[1.0,50.95],[1.4,51.15],[1.4,51.4],[.8,51.5],[1.75,52.6],[.4,52.95],[-.2,54.4],[-3.0,54.4],[-3.1,53.4],[-4.5,52.8],[-4.2,52.2],[-5.2,51.8],[-4.0,51.55],[-3.0,51.3],[-4.2,51.2]];
+const VILLES=[["Rouen",1.1,49.44],["Bordeaux",-.58,44.84],["Toulouse",1.44,43.6],["Marseille",5.37,43.3],["Dijon",5.04,47.32],["Reims",4.03,49.26],["Nantes",-1.55,47.22],["Gênes",8.93,44.41],["Turin",7.69,45.07],["Bologne",11.34,44.49],["Madrid",-3.7,40.42],["Londres",-.12,51.5],["Bruges",3.22,51.2],["Vienne",16.37,48.2],["Bâle",7.59,47.56],["Lisbonne",-9.0,38.72],["Séville",-5.98,37.39],["Prague",14.42,50.09],["Nuremberg",11.08,49.45],["Strasbourg",7.75,48.58],["Genève",6.14,46.2],["Barcelone",2.17,41.39],["Palerme",13.36,38.05],["Bari",16.87,41.12]];
+let alea=(a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296})(1515);
+const dedans=(p,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
+const presLieu=(lon,lat,r)=>LIEUX.some(l=>Math.hypot((l.lon-lon)*CX,l.lat-lat)<r)||VILLES.some(v=>Math.hypot((v[1]-lon)*CX,v[2]-lat)<r*.6);
+
+let scene,camera,renderer,ray,ok3d=false,merTex;
+const cam={tx:X(2.6),tz:Z(46.7),dist:14,az:0,pol:.8},vise={};
+const groupes={},cibles=[],salMesh={},flux=[[],[],[],[],[]],plats=[],navires=[];
+let regBre,regAuv,pCalais,pEv=[],labelEmpire,labelStEmpire;
+const mat=(c,o)=>new THREE.MeshLambertMaterial(Object.assign({color:c},o||{}));
+function forme(pts,h,c,y){
+  const sh=new THREE.Shape();pts.forEach((p,i)=>i?sh.lineTo(X(p[0]),-Z(p[1])):sh.moveTo(X(p[0]),-Z(p[1])));
+  const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false}),mat(c));m.rotation.x=-Math.PI/2;m.position.y=y||0;scene.add(m);return m}
+function boite(g,w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x||0,(y||0)+h/2,z||0);g.add(m);return m}
+function cyl(g,r,h,c,x,y,z,s,r2){const m=new THREE.Mesh(new THREE.CylinderGeometry(r2===undefined?r:r2,r,h,s||10),mat(c));m.position.set(x||0,(y||0)+h/2,z||0);g.add(m);return m}
+function cone(g,r,h,c,x,y,z,s){const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,s||10),mat(c));m.position.set(x||0,(y||0)+h/2,z||0);g.add(m);return m}
+function maquette(type){
+  const g=new THREE.Group(),P="#efe6d0",A="#44597c",G="#9aa0aa",B="#7a5433";
+  const tours=(mur,toit,w,d,h)=>[[-w,-d],[w,-d],[-w,d],[w,d]].forEach(p=>{cyl(g,.055,h,mur,p[0],0,p[1]);if(toit)cone(g,.075,.14,toit,p[0],h,p[1]);else cyl(g,.07,.03,mur,p[0],h,p[1])});
+  if(type==="chateau"){boite(g,.34,.16,.22,P);const t=cone(g,.2,.13,A,0,.16,0,4);t.rotation.y=Math.PI/4;t.scale.set(1.25,1,.85);tours(P,A,.17,.11,.22)}
+  else if(type==="chambord"){boite(g,.44,.14,.26,P);boite(g,.2,.2,.2,P,0,.14,0);tours(P,A,.22,.13,.2);[[-.06,-.06],[.06,-.06],[-.06,.06],[.06,.06],[0,0]].forEach((p,i)=>cone(g,.035,i==4?.22:.14,A,p[0],.34,p[1],6))}
+  else if(type==="fort"){boite(g,.34,.14,.24,G);tours(G,null,.17,.12,.22);boite(g,.08,.09,.02,B,0,0,.125)}
+  else if(type==="pont"){boite(g,.2,.16,.2,P,-.16,.05,0);cone(g,.15,.12,A,-.16,.21,0,4).rotation.y=Math.PI/4;boite(g,.36,.1,.1,P,.12,.08,0);boite(g,.36,.03,.11,A,.12,.18,0);[0,.12,.24].forEach(x=>boite(g,.03,.08,.1,P,x,0,0));boite(g,.7,.02,.16,"#4f93c4",0,0,0)}
+  else if(type==="dome"){boite(g,.34,.14,.22,"#ead9c0");cyl(g,.11,.08,"#ead9c0",.06,.14,0,8);const d=new THREE.Mesh(new THREE.SphereGeometry(.12,12,8,0,Math.PI*2,0,Math.PI/2),mat("#b5532f"));d.position.set(.06,.22,0);g.add(d);cyl(g,.02,.06,"#fff",.06,.33,0);boite(g,.07,.3,.07,"#ead9c0",-.17,0,.06)}
+  else if(type==="rome"){boite(g,.4,.04,.26,"#e8e0cf");[-.15,-.05,.05,.15].forEach(x=>cyl(g,.022,.2,"#f4eee0",x,.04,.1));boite(g,.38,.2,.18,"#e8e0cf",0,.04,-.03);boite(g,.42,.04,.28,"#d8cdb4",0,.24,0);const f=cone(g,.2,.09,"#d8cdb4",0,.28,0,3);f.scale.set(1.1,1,.7)}
+  else if(type==="ville"){boite(g,.12,.16,.12,P,-.12,0,0);boite(g,.14,.24,.12,"#e2d6ba",.02,0,-.04);boite(g,.1,.12,.1,P,.14,0,.05);cone(g,.09,.1,A,-.12,.16,0,4).rotation.y=Math.PI/4;cone(g,.05,.22,A,.02,.24,-.04,6);cone(g,.075,.08,"#a8553a",.14,.12,.05,4).rotation.y=Math.PI/4}
+  else if(type==="bataille"){[-1,1].forEach(s=>{const e=boite(g,.03,.42,.012,"#dfe4ea",0,0,0);e.rotation.z=s*.6;e.position.set(0,.2,0);const q=boite(g,.12,.025,.03,"#8a6a2a",0,0,0);q.rotation.z=s*.6;q.position.set(-s*.085,.085,0)});cyl(g,.01,.4,B,.2,0,0,6);boite(g,.14,.09,.008,"#d5402a",.27,.3,0)}
+  else if(type==="bateau"){const c=boite(g,.36,.07,.12,B,0,.02,0);cone(g,.06,.12,B,.24,.02,0,4).rotation.z=-Math.PI/2;cyl(g,.012,.36,B,0,.09,0,6);boite(g,.012,.2,.2,"#fbf7ea",.02,.2,0);cyl(g,.01,.24,B,-.12,.09,0,6);boite(g,.012,.13,.14,"#fbf7ea",-.1,.17,0);boite(g,.05,.03,.005,"#2c5fb6",.03,.45,0)}
+  else if(type==="livre"){[-1,1].forEach(s=>{const p=boite(g,.2,.03,.28,"#fbf7ea",0,0,0);p.rotation.z=s*.25;p.position.set(s*.1,.1,0);const c=boite(g,.21,.012,.3,"#8b2e2a",0,0,0);c.rotation.z=s*.25;c.position.set(s*.1,.075,0)});const pl=boite(g,.015,.3,.015,"#fff",0,0,0);pl.rotation.z=-.5;pl.position.set(.12,.27,0)}
+  else if(type==="presse"){boite(g,.4,.04,.24,B);[-.16,.16].forEach(x=>boite(g,.04,.34,.06,B,x,.04,0));boite(g,.4,.05,.08,B,0,.38,0);cyl(g,.022,.16,"#3d3f45",0,.22,0,8);boite(g,.2,.03,.16,"#3d3f45",0,.19,0);boite(g,.24,.02,.2,"#fbf7ea",0,.1,0);boite(g,.26,.06,.22,"#6b4a2c",0,.04,0)}
+  else if(type==="tour"){cyl(g,.11,.3,P,0,0,0,12);cone(g,.14,.16,"#a8553a",0,.3,0,12);boite(g,.2,.14,.16,P,.16,0,0);boite(g,.22,.02,.18,"#a8553a",.16,.14,0)}
+  else if(type==="tente"){cyl(g,.16,.12,"#fbf7ea",0,0,0,10);cone(g,.19,.2,"#c9382b",0,.12,0,10);cyl(g,.008,.1,B,0,.32,0,5);boite(g,.08,.05,.006,"#f3c04a",.04,.37,0);const l=boite(g,.5,.012,.012,B,0,0,0);l.rotation.z=.35;l.position.set(.3,.14,.1)}
+  g.scale.setScalar(1.15);return g}
+function salamandre(){
+  const g=new THREE.Group(),m=()=>new THREE.MeshLambertMaterial({color:"#ff7a1c",emissive:"#c23a00",emissiveIntensity:.7});
+  const c=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),m());c.scale.set(1.5,.5,.6);c.position.y=.035;g.add(c);
+  const t=new THREE.Mesh(new THREE.SphereGeometry(.035,8,6),m());t.position.set(.11,.04,0);g.add(t);
+  const q=new THREE.Mesh(new THREE.ConeGeometry(.025,.16,6),m());q.rotation.z=Math.PI/2;q.position.set(-.16,.03,.02);g.add(q);
+  [[.05,.06],[.05,-.06],[-.05,.06],[-.05,-.06]].forEach(p=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.02,.015,.05),m());l.position.set(p[0],.012,p[1]);g.add(l)});
+  return g}
+
+function maq(type){const g=maquette({temple:"rome",coupole:"dome",venise:"ville",palais:"chateau"}[type]||type);
+  if(type==="venise")boite(g,.5,.015,.34,"#4f93c4",0,-.005,0);
+  if(type==="palais"){[-.12,-.04,.04,.12].forEach(x=>cyl(g,.014,.15,"#fff",x,0,.115,6))}
+  return g}
+function texteSol(txt,lon,lat,taille,coul,y){
+  const cv=document.createElement("canvas");cv.width=1024;cv.height=128;const c=cv.getContext("2d");
+  c.font="800 78px Fraunces, Georgia, serif";c.textAlign="center";c.textBaseline="middle";c.fillStyle=coul||"rgba(255,255,255,.82)";c.fillText(txt,512,68);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(taille,taille/8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false}));
+  m.rotation.x=-Math.PI/2;m.position.set(X(lon),y||.2,Z(lat));scene.add(m);plats.push(m);return m}
+function arc(a,b,eps,coul,haut,tete){
+  const p0=new THREE.Vector3(X(a[0]),.2,Z(a[1])),p2=new THREE.Vector3(X(b[0]),.24,Z(b[1])),p1=p0.clone().lerp(p2,.5);p1.y=haut||1;
+  const cb=new THREE.QuadraticBezierCurve3(p0,p1,p2),g=new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(cb,28,tete?.035:.018,6),new THREE.MeshLambertMaterial({color:coul,transparent:!tete,opacity:tete?1:.55})));
+  if(tete){const k=new THREE.Mesh(new THREE.ConeGeometry(.1,.24,8),mat(coul));k.position.copy(p2);k.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),cb.getTangent(1).normalize());g.add(k)}
+  const billes=[];for(let i=0;i<3;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(tete?.05:.07,8,6),new THREE.MeshBasicMaterial({color:coul}));g.add(s);billes.push(s)}
+  g.userData={cb,billes};scene.add(g);eps.forEach(i=>flux[i].push(g));return g}
+function instances(geo,materiau,liste,ech){
+  const im=new THREE.InstancedMesh(geo,materiau,liste.length),o=new THREE.Object3D();
+  liste.forEach((p,i)=>{o.position.set(X(p[0]),p[3]+(ech?p[2]*ech/2:0),Z(p[1]));o.scale.set(p[2],p[2],p[2]);o.rotation.y=p[0]*7;o.updateMatrix();im.setMatrixAt(i,o.matrix)});
+  im.instanceMatrix.needsUpdate=true;scene.add(im);return im}
+function decor(){
+  /* montagnes */
+  const mts=[],chaine=(pts,n,larg,h0,h1,y)=>{for(let i=0;i<n;i++){const s=alea()*(pts.length-1),k=Math.floor(s),f=s-k,a=pts[k],b=pts[k+1];
+    const lon=a[0]+(b[0]-a[0])*f+(alea()-.5)*larg,lat=a[1]+(b[1]-a[1])*f+(alea()-.5)*larg;if(!presLieu(lon,lat,.5))mts.push([lon,lat,h0+alea()*(h1-h0),y])}};
+  chaine([[6.9,43.9],[6.8,44.6],[6.9,45.3],[7.3,45.9],[8.2,46.2],[9.5,46.5],[10.8,46.75],[12.2,46.85],[13.4,46.6]],90,.55,.8,1.5,.08);
+  chaine([[-1.2,43.0],[0,42.75],[1,42.68],[2.3,42.5]],30,.28,.7,1.2,.08);
+  chaine([[2.6,45.9],[2.9,45.2],[3.2,44.6]],16,.7,.4,.7,.16);
+  chaine([[8.9,44.55],[10.2,44.3],[11.6,43.9],[12.7,43.0],[13.5,42.3],[14.5,41.5],[15.6,40.6],[16.2,39.4]],60,.3,.5,.95,.09);
+  chaine([[20.3,42.0],[20.9,40.6],[21.6,39.3],[22.2,38.3]],26,.6,.6,1,.08);chaine([[-5.5,40.4],[-3.6,41.0],[-2.2,41.7]],14,.5,.5,.8,.08);chaine([[-3.6,37.1],[-2.6,37.2]],6,.3,.6,.9,.08);
+  chaine([[6.0,46.4],[6.6,47.2],[7.1,48.0],[7.2,48.6]],14,.3,.35,.55,.08);chaine([[22.5,45.5],[25,45.6],[26,46.8]],14,.6,.5,.8,.08);chaine([[29,39.5],[30.8,38.5],[30,37.2]],12,1.2,.5,.9,.08);
+  instances(new THREE.ConeGeometry(.3,.5,6),mat("#8d8a78",{flatShading:true}),mts,.5);
+  instances(new THREE.ConeGeometry(.13,.19,6),mat("#ffffff",{flatShading:true}),mts.filter(m=>m[2]>.85).map(m=>[m[0],m[1],m[2],m[3]+m[2]*.33]),.19);
+  /* forêts */
+  const arbres=(n,boite4,ok,y,liste)=>{let k=0,g=0;while(k<n&&g++<n*30){const lon=boite4[0]+alea()*(boite4[2]-boite4[0]),lat=boite4[1]+alea()*(boite4[3]-boite4[1]);
+    if(ok([lon,lat])&&!presLieu(lon,lat,.42)&&!mts.some(m=>Math.hypot((m[0]-lon)*CX,m[1]-lat)<.3)){liste.push([lon,lat,.7+alea()*.7,y]);k++}}};
+  const fr=[],eu=[],it=[],su=[];
+  arbres(230,[-4.8,42.4,7.3,51],p=>dedans(p,ROYAUME)&&!dedans(p,BRETAGNE)&&!dedans(p,AUVERGNE),.13,fr);arbres(30,[-4.8,47,-1,49],p=>dedans(p,BRETAGNE),.16,fr);arbres(14,[2.2,44.9,4,46.8],p=>dedans(p,AUVERGNE),.16,fr);
+  arbres(230,[4,45.3,31,54.2],p=>dedans(p,CONTINENT)&&!dedans(p,ROYAUME)&&!dedans(p,ITALIE)&&p[1]>44.8-(p[0]-13)*.02,.07,eu);arbres(40,[-5.5,50,1.7,54.3],p=>dedans(p,ANGLETERRE),.07,eu);
+  arbres(70,[7,38,18.5,46.8],p=>dedans(p,ITALIE),.09,it);arbres(70,[-9.3,36.2,3.2,43.5],p=>dedans(p,CONTINENT)&&!dedans(p,ROYAUME)&&p[1]<43.3&&p[0]<3.3,.07,su);arbres(45,[19.5,36.5,29,44],p=>dedans(p,CONTINENT),.07,su);
+  const sapin=new THREE.ConeGeometry(.07,.2,5);
+  instances(sapin,mat("#3f7a43",{flatShading:true}),fr,.2);instances(sapin,mat("#577a4f",{flatShading:true}),eu,.2);
+  instances(new THREE.ConeGeometry(.04,.24,5),mat("#2f5d3a",{flatShading:true}),it,.24);instances(new THREE.SphereGeometry(.07,5,4),mat("#8a9a55",{flatShading:true}),su,.1);
+  /* fleuves */
+  const fleuve=(pts,y)=>scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(X(p[0]),y||.165,Z(p[1])))),50,.022,5),mat("#7cc0ea")));
+  fleuve([[-2.1,47.27],[-1.55,47.22],[-.55,47.4],[.25,47.3],[.7,47.38],[1.33,47.59],[1.9,47.9],[2.6,47.7],[3.0,47.1],[3.2,46.6],[3.9,45.9],[4.1,45.2]]);
+  fleuve([[.2,49.45],[1.1,49.44],[1.8,49.05],[2.35,48.86],[3.0,48.5],[3.9,48.3],[4.6,47.9]]);
+  fleuve([[4.8,43.4],[4.75,44.2],[4.85,45.0],[4.83,45.76],[4.9,46.5],[5.1,47.2]]);fleuve([[-1.05,45.55],[-.58,44.84],[.6,44.2],[1.44,43.6],[.8,43.0]]);
+  fleuve([[12.3,44.95],[11.3,45.05],[10.0,45.1],[9.2,45.1],[8.2,45.15],[7.6,44.9]],.105);fleuve([[12.25,41.75],[12.5,41.9],[12.4,42.6],[12.1,43.3]],.105);
+  fleuve([[4.3,51.9],[6.0,51.8],[6.8,51.0],[7.6,50.3],[8.27,50.0],[8.3,49.0],[7.75,48.58],[7.59,47.56]],.085);fleuve([[29.6,45.2],[26.5,44.0],[22.8,44.2],[20.4,44.8],[18.9,45.9],[19.0,47.5],[16.37,48.2],[13.5,48.5],[11.5,48.8]],.085);
+  /* villes */
+  VILLES.forEach(v=>{const g=new THREE.Group(),y=dedans([v[1],v[2]],ROYAUME)?(dedans([v[1],v[2]],BRETAGNE)?.16:.13):dedans([v[1],v[2]],ITALIE)?.09:.07;g.position.set(X(v[1]),y,Z(v[2]));
+    boite(g,.07,.07,.07,"#f3ecd9",-.05,0,0);boite(g,.06,.11,.06,"#e7dcc0",.03,0,-.03);boite(g,.06,.05,.06,"#f3ecd9",.05,0,.05);cone(g,.05,.05,"#a8553a",-.05,.07,0,4).rotation.y=.78;cone(g,.035,.08,"#44597c",.03,.11,-.03,4).rotation.y=.78;scene.add(g);
+    texteSol(v[0],v[1],v[2]-.2,1.5,"rgba(255,255,255,.9)",y+.05)});
+  /* navires et rose des vents */
+  [[-6.5,45.3,.9],[6.2,41.2,.7],[15.4,43.0,.35],[25.3,38.0,.4],[19.0,38.6,.6],[-1.5,50.15,.25],[-10.5,39.5,.8]].forEach((p,i)=>{const g=maquette("bateau");g.scale.setScalar(.75);g.userData={cx:X(p[0]),cz:Z(p[1]),r:p[2],ph:i*1.7,v:(i%2?1:-1)*(.00012+.00004*i)};scene.add(g);navires.push(g)});
+  const cv=document.createElement("canvas");cv.width=cv.height=256;const c=cv.getContext("2d");c.translate(128,128);
+  for(let i=0;i<16;i++){c.rotate(Math.PI/8);const L=i%4===3?112:i%2?78:48;c.beginPath();c.moveTo(0,-L);c.lineTo(9,0);c.lineTo(-9,0);c.closePath();c.fillStyle=i%2?"rgba(243,192,74,.95)":"rgba(255,255,255,.8)";c.fill()}
+  c.beginPath();c.arc(0,0,60,0,7);c.strokeStyle="rgba(255,255,255,.7)";c.lineWidth=3;c.stroke();
+  const rose=new THREE.Mesh(new THREE.PlaneGeometry(3,3),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false}));rose.rotation.x=-Math.PI/2;rose.position.set(X(-9.5),.03,Z(47.2));scene.add(rose);
+  texteSol("N",-9.5,48.9,3,"rgba(243,192,74,.95)",.03)}
+function init3d(){
+  const cv=$("#c");
+  renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  scene=new THREE.Scene();scene.background=new THREE.Color("#0d2038");scene.fog=new THREE.Fog("#0d2038",95,190);
+  camera=new THREE.PerspectiveCamera(42,1,.1,260);ray=new THREE.Raycaster();
+  scene.add(new THREE.HemisphereLight("#ffffff","#3a5078",.82));
+  const so=new THREE.DirectionalLight("#fff3d6",.5);so.position.set(-6,10,6);scene.add(so);
+  const mc=document.createElement("canvas");mc.width=mc.height=128;const m2=mc.getContext("2d");m2.fillStyle="#1b4877";m2.fillRect(0,0,128,128);m2.strokeStyle="rgba(255,255,255,.2)";m2.lineWidth=3;m2.lineCap="round";
+  [[14,30],[78,58],[40,98],[100,112]].forEach(p=>{m2.beginPath();m2.moveTo(p[0],p[1]);m2.quadraticCurveTo(p[0]+9,p[1]-8,p[0]+18,p[1]);m2.stroke()});
+  merTex=new THREE.CanvasTexture(mc);merTex.wrapS=merTex.wrapT=THREE.RepeatWrapping;merTex.repeat.set(70,70);
+  const mer=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshLambertMaterial({map:merTex}));mer.rotation.x=-Math.PI/2;mer.position.set(X(10),0,0);scene.add(mer);
+  forme(CONTINENT,.07,"#aeb08e");forme(ANGLETERRE,.07,"#a9a58e");forme(ANATOLIE,.07,"#b9a3b3");forme(AFRIQUE,.07,"#d8c9a0");forme(CRETE,.07,"#aeb08e");
+  ILES.forEach(p=>forme(p,.09,"#d8b384"));forme(ITALIE,.02,"#d8b384",.07);
+  forme(ROYAUME,.06,"#2c5fb6",.07);
+  regBre=forme(BRETAGNE,.03,"#c9a35a",.13);regAuv=forme(AUVERGNE,.03,"#c9a35a",.13);
+  pCalais=cyl(scene,.14,.03,"#b5483d",X(1.86),.13,Z(50.95),14);
+  [[6.18,49.12],[5.89,48.68],[5.38,49.16]].forEach(p=>pEv.push(cyl(scene,.11,.03,"#74a8f2",X(p[0]),.13,Z(p[1]),14)));
+  decor();
+  LIEUX.forEach(l=>{
+    const g=new THREE.Group(),sur=dedans([l.lon,l.lat],BRETAGNE)||dedans([l.lon,l.lat],AUVERGNE)?.16:dedans([l.lon,l.lat],ROYAUME)?.13:dedans([l.lon,l.lat],ITALIE)?.09:.07;g.position.set(X(l.lon),sur,Z(l.lat));
+    const socle=cyl(g,.3,.025,"#f3c04a",0,0,0,20);socle.material=new THREE.MeshLambertMaterial({color:"#f3c04a",emissive:"#7a5200"});g.userData.socle=socle;
+    const mq=maq(l.m);mq.position.y=.025;g.add(mq);
+    const hit=new THREE.Mesh(new THREE.SphereGeometry(.42,8,6),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.position.y=.3;hit.userData={genre:"lieu",id:l.id};g.add(hit);
+    g.userData.hit=hit;scene.add(g);groupes[l.id]=g});
+  SALAMANDRES.forEach(s=>{
+    const p=[s.lon,s.lat],y=dedans(p,BRETAGNE)||dedans(p,AUVERGNE)?.16:dedans(p,ROYAUME)?.13:.09;
+    const g=salamandre();g.position.set(X(s.lon),y,Z(s.lat));g.userData.y=y;g.rotation.y=alea()*6;
+    const hit=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.userData={genre:"sal",id:s.id};g.add(hit);
+    g.userData.hit=hit;scene.add(g);salMesh[s.id]=g});
+  const OR="#f3c04a",BL="#ffffff",RG="#e2552d";
+  arc([8.27,50.0],[2.35,48.86],[0],BL,1.3);arc([8.27,50.0],[12.4,42.0],[0],BL,2.2);arc([28.95,41.0],[12.33,45.44],[0,1],BL,3);arc([28.95,41.0],[11.25,43.77],[0],BL,3.4);arc([23.7,37.95],[12.5,41.9],[0],"#d9c7a0",2.4);
+  arc([4.85,45.76],[14.0,41.1],[1],RG,1.8,1);arc([11.25,43.77],[.85,47.35],[1],OR,2.4);arc([12.33,45.44],[4.83,45.76],[1],BL,1.6);arc([14.25,40.85],[.85,47.35],[1],BL,3);
+  arc([4.85,45.76],[8.9,45.4],[2,3],RG,.9,1);arc([9.19,45.46],[1.33,47.59],[2],BL,1.9);
+  arc([11.25,43.77],[.85,47.35],[3],OR,2.4);arc([12.5,41.9],[2.95,48.2],[3],OR,2.9);arc([12.33,45.44],[2.75,48.82],[3],BL,2.3);arc([-2.2,48.75],[-9.8,50.2],[3],"#fbf7ea",1.2,1);
+  arc([11.25,43.77],[2.1,49.0],[4],OR,2.6);arc([-1.16,47.34],[12.5,41.9],[4],BL,2.8);arc([2.6,48.9],[5.95,49.1],[4],RG,.7,1);arc([2.3,49.8],[1.95,50.8],[4],RG,.5,1);
+  ok3d=true;
+  const poseTextes=()=>{texteSol("ROYAUME DE FRANCE",1.6,44.25,3.6);texteSol("ITALIE",12.9,43.25,2.2,"rgba(110,52,22,.9)");texteSol("ESPAGNE",-3.6,41.3,2.6);texteSol("ANGLETERRE",-1.6,52.2,2.6);texteSol("PORTUGAL",-8.1,39.9,1.6);
+    texteSol("EMPIRE OTTOMAN",25.5,41.9,3.4);texteSol("GRÈCE",22.1,39.2,1.7);texteSol("OCÉAN ATLANTIQUE",-7,44.2,4.2,"rgba(160,205,240,.75)",.03);texteSol("MER MÉDITERRANÉE",6.5,39.6,4.6,"rgba(160,205,240,.75)",.03);
+    texteSol("Manche",-2.4,50.1,1.6,"rgba(160,205,240,.8)",.03);texteSol("Mer Adriatique",15.6,43.5,2.2,"rgba(160,205,240,.8)",.03);texteSol("Mer Égée",25.2,38.9,1.8,"rgba(160,205,240,.8)",.03);
+    texteSol("Les Alpes",8.6,46.95,1.9,"rgba(255,255,255,.9)",.5);texteSol("Pyrénées",.4,42.25,1.8,"rgba(255,255,255,.9)",.3);
+    texteSol("Bretagne",-2.95,48.18,1.5,"rgba(20,32,58,.85)");texteSol("Auvergne",3.05,45.55,1.4,"rgba(20,32,58,.85)");
+    labelStEmpire=texteSol("SAINT-EMPIRE",11.5,51.3,3.4);labelEmpire=texteSol("EMPIRE DE CHARLES QUINT",12.5,51.3,5,"rgba(255,214,150,.95)");
+    flux[3].push(texteSol("vers le Canada",-8.2,50.9,2,"rgba(251,247,234,.95)",.03));majEpoque3d()};
+  const f=document.fonts&&document.fonts.load?Promise.race([document.fonts.load("800 78px Fraunces"),new Promise(r=>setTimeout(r,1800))]):Promise.resolve();
+  f.then(poseTextes,poseTextes);
+  taille();addEventListener("resize",taille);gestes(cv);requestAnimationFrame(boucle)}
+function taille(){
+  if(!ok3d)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  if(!taille.fait){cam.dist=distPour(3.9);taille.fait=true}}
+function distPour(demi){const hf=Math.atan(Math.tan(camera.fov*Math.PI/360)*camera.aspect);return Math.max(8.5,Math.min(75,demi/Math.tan(hf)))}
+const VUES={fr:[2.6,46.7,3.9],it:[11.8,43.2,3.6],or:[23.5,40.2,5.2],tout:[10.5,44.6,14.6]};
+function vue(k){const v=VUES[k];vole(X(v[0]),Z(v[1]),distPour(v[2]),0)}
+function poseCam(){const sp=Math.sin(cam.pol),cp=Math.cos(cam.pol);
+  camera.position.set(cam.tx+cam.dist*sp*Math.sin(cam.az),cam.dist*cp,cam.tz+cam.dist*sp*Math.cos(cam.az));camera.lookAt(cam.tx,0,cam.tz)}
+function borne(){cam.dist=Math.max(2.8,Math.min(80,cam.dist));cam.tx=Math.max(X(-11),Math.min(X(31),cam.tx));cam.tz=Math.max(Z(55),Math.min(Z(34),cam.tz))}
+function vole(tx,tz,dist,az){vise.t0=performance.now();vise.de={tx:cam.tx,tz:cam.tz,dist:cam.dist,az:cam.az};vise.a={tx,tz,dist:dist||cam.dist,az:az===undefined?cam.az:az};vise.on=true}
+const calme=matchMedia("(prefers-reduced-motion:reduce)").matches;
+let tAff=0;
+function boucle(t){
+  requestAnimationFrame(boucle);
+  if(vise.on){let k=Math.min(1,(t-vise.t0)/(calme?1:900));const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    for(const c in vise.a)cam[c]=vise.de[c]+(vise.a[c]-vise.de[c])*e;if(k>=1)vise.on=false}
+  borne();poseCam();
+  if(!calme){const s=1+Math.sin(t/350)*.06;for(const id in salMesh){const g=salMesh[id];if(g.visible){g.rotation.y+=.006;g.position.y=g.userData.y+.035+Math.abs(Math.sin(t/500+g.position.x))*.03}}
+    lieuxDe(S.ep).forEach(l=>{if(!S.lieux[l.id])groupes[l.id].userData.socle.scale.set(s,1,s)});
+    flux[S.ep].forEach(g=>{const u=g.userData;if(u.billes)u.billes.forEach((b,i)=>b.position.copy(u.cb.getPoint((t*.00009+i/3)%1)))});
+    navires.forEach(g=>{const u=g.userData,a=u.ph+t*u.v;g.position.set(u.cx+Math.cos(a)*u.r,.02+Math.sin(t/600+u.ph)*.012,u.cz+Math.sin(a)*u.r);g.rotation.y=-a-(u.v>0?Math.PI/2:-Math.PI/2)});
+    merTex.offset.set(t*.000012,t*.000007)}
+  plats.forEach(m=>m.rotation.z=cam.az);
+  renderer.render(scene,camera);
+  if(t-tAff>30){tAff=t;poseLabels()}}
+const v3=window.THREE?new THREE.Vector3():null;
+function poseLabels(){
+  const w=innerWidth,h=innerHeight,ppu=h/(2*cam.dist*Math.tan(camera.fov*Math.PI/360));
+  $("#labs").classList.toggle("loin",ppu<74);
+  document.querySelectorAll(".lab").forEach(el=>{const g=groupes[el.dataset.id];v3.copy(g.position);v3.y+=.68;v3.project(camera);
+    if(v3.z>1){el.style.display="none";return}el.style.display="";
+    el.style.transform="translate("+((v3.x+1)/2*w).toFixed(1)+"px,"+((1-v3.y)/2*h).toFixed(1)+"px) translate(-50%,-100%)"})}
+function gestes(cv){
+  const pts=new Map();let d0=0,a0=0,bouge=0,t0=0;
+  const info=()=>{const p=[...pts.values()];return{d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),a:Math.atan2(p[1].y-p[0].y,p[1].x-p[0].x)}};
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});
+    if(pts.size===1){bouge=0;t0=performance.now()}if(pts.size===2){const i=info();d0=i.d;a0=i.a}vise.on=false});
+  cv.addEventListener("pointermove",e=>{const p=pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+    if(pts.size===1){bouge+=Math.abs(dx)+Math.abs(dy);
+      if(p.b===2||e.shiftKey){cam.az-=dx*.006}
+      else{const s=2*cam.dist*Math.tan(camera.fov*Math.PI/360)/innerHeight,c=Math.cos(cam.az),sn=Math.sin(cam.az),f=dy*s/Math.cos(cam.pol);
+        cam.tx+=-dx*s*c-f*sn;cam.tz+=dx*s*sn-f*c}}
+    else if(pts.size===2){const i=info();if(d0>0)cam.dist*=d0/i.d;let da=i.a-a0;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;cam.az-=da;d0=i.d;a0=i.a;bouge=99}});
+  const fin=e=>{const p=pts.get(e.pointerId);pts.delete(e.pointerId);if(p&&pts.size===0&&bouge<12&&performance.now()-t0<600&&e.type==="pointerup")touche(e.clientX,e.clientY)};
+  cv.addEventListener("pointerup",fin);cv.addEventListener("pointercancel",fin);
+  cv.addEventListener("wheel",e=>{e.preventDefault();cam.dist*=Math.exp(e.deltaY*.0012);vise.on=false},{passive:false});
+  cv.addEventListener("contextmenu",e=>e.preventDefault());
+  $("#z-plus").onclick=()=>vole(cam.tx,cam.tz,cam.dist*.65);$("#z-moins").onclick=()=>vole(cam.tx,cam.tz,cam.dist*1.5);
+  $("#t-g").onclick=()=>vole(cam.tx,cam.tz,cam.dist,cam.az-.5);$("#t-d").onclick=()=>vole(cam.tx,cam.tz,cam.dist,cam.az+.5)}
+function touche(x,y){
+  ray.setFromCamera({x:x/innerWidth*2-1,y:-(y/innerHeight)*2+1},camera);
+  const hits=ray.intersectObjects(cibles,false);if(!hits.length)return;
+  const sal=hits.find(h=>h.object.userData.genre==="sal"),u=(sal||hits[0]).object.userData;
+  if(u.genre==="sal")trouveSal(u.id);else ouvreLieu(u.id)}
+function majEpoque3d(){
+  if(!ok3d)return;cibles.length=0;
+  LIEUX.forEach(l=>{const g=groupes[l.id];g.visible=l.e===S.ep;if(g.visible){cibles.push(g.userData.hit);const st=S.lieux[l.id],so=g.userData.socle;
+    so.material.color.set(st==="or"?"#f3c04a":st?"#c3c9d4":"#f3c04a");so.material.emissive.set(st?"#000000":"#7a5200");so.scale.set(1,1,1)}});
+  SALAMANDRES.forEach(s=>{const g=salMesh[s.id];g.visible=s.e===S.ep&&!S.sal[s.id];if(g.visible)cibles.push(g.userData.hit)});
+  flux.forEach(f=>f.forEach(g=>g.visible=false));flux[S.ep].forEach(g=>g.visible=true);
+  const acq="#74a8f2",pas="#c9a35a",gagne=S.ep===4||(S.ep===3&&S.lieux.vannes);
+  regBre.material.color.set(gagne?acq:pas);regAuv.material.color.set(gagne?acq:pas);
+  pCalais.visible=S.ep===4;pCalais.material.color.set(S.lieux.calais?acq:"#b5483d");
+  pEv.forEach(p=>p.visible=S.ep===4&&!!S.lieux.calais);
+  if(labelEmpire){labelEmpire.visible=S.ep>=3;labelStEmpire.visible=S.ep<3}}
+
+/* ============ INTERFACE ============ */
+const pile=[];
+function majHud(){
+  const E=EPOQUES[S.ep],L=lieuxDe(S.ep),SL=salDe(S.ep);
+  $("#h-roi").textContent=E.roi;$("#h-sous").textContent=E.ans+" · "+E.sous;
+  $("#h-but").textContent=L.filter(l=>S.lieux[l.id]).length+" / "+L.length+" lieux · "+SL.filter(s=>S.sal[s.id]).length+" / "+SL.length+" salamandres"+(S.ep===S.max&&S.ep<4&&!pret(S.ep)?" · roi suivant dès "+SEUIL+" lieux":"");
+  const bj=$("#b-joueur");if(BASE.joueurs[BASE.actif])bj.textContent="👤 "+BASE.joueurs[BASE.actif].nom;
+  $("#rois").innerHTML=EPOQUES.map((e,i)=>`<button data-e="${i}" class="${i===S.ep?"ici":""} ${i>S.max?"ferme":""}" ${i===S.ep?'aria-current="true"':""}><b>${i>S.max?"🔒 ":""}${e.roi}</b><small>${e.ans.replace(/ /g,"")}</small></button>`).join("");
+  $("#labs").innerHTML=L.map(l=>`<button class="lab ${S.lieux[l.id]==="or"?"or":S.lieux[l.id]?"fait":""}" data-id="${l.id}"><i>${CATS[l.k][1]}</i><span>${l.n}</span></button>`).join("");
+  $("#b-retour").hidden=!pile.length;
+  const br=$("#b-roi");br.hidden=!(S.ep===S.max&&S.ep<4&&pret(S.ep));br.style.animation=epoqueFinie(S.ep)?"":"none"}
+$("#rois").onclick=e=>{const b=e.target.closest("button");if(!b)return;const i=+b.dataset.e;
+  if(i>S.max){if(i===S.max+1&&pret(S.max)){if(S.ep!==S.max)vaEpoque(S.max);succession()}
+    else{const r=Math.min(SEUIL,lieuxDe(S.max).length)-lieuxDe(S.max).filter(l=>S.lieux[l.id]).length;toast(i>S.max+1?"Les rois arrivent l'un après l'autre. Commence par l'époque de **"+EPOQUES[S.max].roi+"**.":"Explore encore **"+r+" lieu"+(r>1?"x":"")+"** de l'époque de **"+EPOQUES[S.max].roi+"** pour faire venir le roi suivant.")}return}
+  if(i!==S.ep){empile();vaEpoque(i)}};
+$("#labs").onclick=e=>{const b=e.target.closest(".lab");if(b)ouvreLieu(b.dataset.id)};
+$("#sauts").onclick=e=>{const b=e.target.closest("button");if(b&&ok3d)vue(b.dataset.s)};
+$("#b-leg").onclick=()=>{const l=$("#legende");l.hidden=!l.hidden;$("#b-leg").setAttribute("aria-expanded",!l.hidden);$("#b-leg").textContent=l.hidden?"Légende":"Fermer la légende"};
+$("#b-roi").onclick=()=>succession();
+function empile(){pile.push({ep:S.ep,id:P?P.l.id:null});if(pile.length>15)pile.shift()}
+$("#b-retour").onclick=()=>{const p=pile.pop();if(!p)return;fermePanneau(true);vaEpoque(p.ep);if(p.id)ouvreLieu(p.id);else majHud()};
+function aller(id){const l=lieu(id);if(!l)return;
+  if(l.e>S.max){toast("Ce lieu s'ouvrira avec le roi **"+EPOQUES[l.e].roi+"**.");return}
+  if(P&&P.l.id===id){fermeFiche();return}
+  empile();fermeFiche();fermePanneau(true);if(l.e!==S.ep)vaEpoque(l.e,false,true);ouvreLieu(id);majHud()}
+function vaEpoque(i,avecIntro,sansVol){
+  fermePanneau(true);S.ep=i;sauve();majHud();majEpoque3d();
+  if(ok3d&&!sansVol)vue("fr");
+  if(avecIntro||!S.intro[i])introEpoque(i)}
+function introEpoque(i){
+  const E=EPOQUES[i];S.intro[i]=1;sauve();
+  ouvreFiche(`<div class="fiche"><p class="grand">${E.sous}<br><span style="font-size:.6em;font-family:var(--texte);font-weight:500">${E.roi} · ${E.ans}</span></p>${E.intro.map(t=>`<p>${fmt(t)}</p>`).join("")}</div>
+   <div class="pied">${parle?'<button class="btn" id="f-dire">🔊 Écouter</button>':""}<button class="btn suite" id="f-ok">C'est parti</button></div>`);
+  $("#f-ok").onclick=fermeFiche;attendre($("#f-ok"),Math.max(5000,Math.min(14000,mots(E.intro.join(" "))*300)),"C'est parti");if(parle)$("#f-dire").onclick=()=>dire(E.intro.join(" "))}
+function ouvreFiche(html,large){chut();const f=$("#fiche");f.className=large?"large":"";f.innerHTML=html;$("#voile").hidden=false}
+function fermeFiche(){chut();$("#voile").hidden=true;$("#fiche").innerHTML=""}
+$("#voile").onclick=e=>{if(e.target.id==="voile"&&$("#f-x"))fermeFiche()};
+
+/* ---- panneau d'un lieu ---- */
+let P=null;
+function ouvreLieu(id){
+  const l=lieu(id);if(!l||l.e!==S.ep)return;
+  const n=l.f.length,deja=!!S.lieux[id];
+  P={l,pas:deja?0:Math.min(S.pas[id]||0,n),fautes:0,deja,retourJeu:false};
+  if(ok3d){const etroit=innerWidth<900,d=etroit?6.5:5.5,o=d*(etroit?.3:.26),g=groupes[id].position;
+    vole(g.x+(etroit?Math.sin(cam.az):Math.cos(cam.az))*o,g.z+(etroit?Math.cos(cam.az):-Math.sin(cam.az))*o,d)}
+  $("#panneau").hidden=false;affichePas()}
+function fermePanneau(silence){chut();if(!P)return;P=null;$("#panneau").hidden=true;if(!silence)verifieFin()}
+$("#p-x").onclick=()=>fermePanneau();
+$("#p-pas").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled){P.pas=+b.dataset.k;affichePas()}};
+function affichePas(){
+  chut();const l=P.l,n=l.f.length,i=P.pas,corps=$("#p-corps"),pied=$("#p-pied"),cat=CATS[l.k];
+  const vuMax=P.deja?n+1:Math.max(S.vu[l.id]||0,i);S.vu[l.id]=vuMax;if(i<=n)S.pas[l.id]=i;sauve();
+  $("#p-tete").style.background=cat[2];$("#p-emb").textContent=cat[1];
+  $("#p-titre").innerHTML=`${l.n}<small>${cat[0]} ${COTES[l.s]} · ${l.d}</small>`;
+  $("#p-pas").innerHTML=l.f.map((_,k)=>`<button data-k="${k}" class="${k<=vuMax?"vu":""} ${k===i?"ici":""}" ${k<=vuMax?"":"disabled"} aria-label="Fiche ${k+1}"></button>`).join("")+`<button data-k="${n}" class="jeu ${n<=vuMax?"vu":""} ${i>=n?"ici":""}" ${n<=vuMax?"":"disabled"} aria-label="Le jeu"></button>`;
+  corps.scrollTop=0;
+  const avant=i>0?`<button class="btn" id="p-av">← Retour</button>`:"";
+  if(i<n){
+    const c=fiche(l.f[i]),lu=(c.e?ETQ[c.e][0].replace(/^\S+ /,"")+". ":"")+c.t,neuf=i>=vuMax&&!P.deja,attente=neuf?Math.max(4000,Math.min(14000,mots(c.t)*420)):0;
+    if(c.e==="A"){S.ant[l.id+":"+i]=1;sauve()}
+    corps.innerHTML=c.e?`<div class="bloc ${ETQ[c.e][1]}"><span class="etq">${ETQ[c.e][0]}</span><p class="lire">${fmt(c.t)}</p></div>`:`<p class="lire">${fmt(c.t)}</p>`;
+    pied.innerHTML=avant+(parle?'<button class="btn" id="p-dire" aria-label="Écouter la fiche">🔊</button>':"")
+      +(P.retourJeu?'<button class="btn suite" id="p-jeu">Revenir à la question →</button>':`<button class="btn suite" id="p-suite">${i===n-1?"À toi de jouer →":"Suite →"}</button>`);
+    if(P.retourJeu)$("#p-jeu").onclick=()=>{P.retourJeu=false;P.pas=n;affichePas()};
+    else{const b=$("#p-suite");attendre(b,attente,b.textContent);b.onclick=()=>{P.pas++;affichePas()}}
+    if(parle)$("#p-dire").onclick=()=>dire(lu);
+  }else if(i===n){
+    P.retourJeu=false;P.fautes=0;pied.innerHTML=`<button class="btn" id="p-av">← Relire les fiches</button>`;corps.innerHTML="";
+    JEUX[l.j.t](corps,l.j,{rate:()=>P.fautes++,relire:k=>{P.retourJeu=true;P.pas=k;affichePas()},
+      gagne:()=>{pied.insertAdjacentHTML("beforeend",'<button class="btn suite" id="p-suite">Voir mon sceau →</button>');$("#p-suite").onclick=()=>{P.pas++;affichePas()};$("#p-suite").scrollIntoView({block:"nearest"})}});
+  }else recompense();
+  const av=$("#p-av");if(av)av.onclick=()=>{P.pas=i>n?n-1:i-1;affichePas()}}
+function sceauSvg(or){const c=or?"#f3c04a":"#c3c9d4",b=or?"#b9851a":"#7d8695";
+  return `<svg class="sceau" viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="55" r="50" fill="${c}" stroke="${b}" stroke-width="5"/><circle cx="55" cy="55" r="39" fill="none" stroke="${b}" stroke-width="2" stroke-dasharray="3 5"/>
+  <path d="M30 62c8-14 22-18 34-12 6 3 10 2 14-3-1 9-7 14-16 12-8-2-14 0-18 7 6 1 10 4 12 9-10 0-18-3-26-13z" fill="${b}"/><circle cx="76" cy="48" r="5" fill="${b}"/><path d="M52 40l3-9 3 9 9-2-6 7 6 7-9-2-3 9-3-9-9 2 6-7-6-7z" fill="${or?"#f0642a":"#fff"}" opacity=".9" transform="translate(0 -4) scale(.55) translate(45 20)"/></svg>`}
+
+function recompense(){
+  const l=P.l,tol=l.j.t==="quiz"?0:1,or=P.fautes<=tol,avant=S.lieux[l.id];
+  if(or||!avant)S.lieux[l.id]=or?"or":"argent";S.vu[l.id]=l.f.length+1;sauve();majHud();majEpoque3d();
+  if(!avant&&l.id==="vannes")toast("La **Bretagne** et l'**Auvergne** entrent dans le domaine royal. Regarde la carte !");
+  const v=l.v&&lieu(l.v),vOk=v&&v.e<=S.max;
+  $("#p-corps").innerHTML=sceauSvg(or)+`<p class="lire" style="text-align:center">${or?"<strong>Sceau d'or !</strong> Tu as bien observé.":"<strong>Sceau d'argent.</strong> Pour gagner l'or, reviens plus tard et réponds juste du premier coup."}</p>`
+   +(l.apres?`<p class="retour">${fmt(l.apres)}</p>`:"")
+   +(vOk?`<div class="aussi"><strong>À relier :</strong> ${v.c} (${v.n}, ${v.d}).<br><button class="btn" id="p-voir">Aller voir ${v.n} →</button></div>`:"")
+   +(l.l?`<p class="retour" style="font-weight:700;margin-top:16px">Pour aller plus loin, avec un adulte :</p><div class="liens">${l.l.map(lien).join("")}</div>`:"");
+  $("#p-pied").innerHTML='<button class="btn" id="p-av">← Revoir les fiches</button><button class="btn suite" id="p-suite">Retour à la carte</button>';$("#p-suite").onclick=()=>fermePanneau();
+  if(vOk)$("#p-voir").onclick=()=>aller(v.id)}
+const lien=k=>`<a href="${LIENS[k][2]}" target="_blank" rel="noopener">${LIENS[k][0]}<small>${LIENS[k][1]}</small></a>`;
+function verifieFin(){
+  majHud();if(S.ep!==S.max)return;
+  if(!epoqueFinie(S.ep)){if(S.ep<4&&pret(S.ep)&&!S.seuil[S.ep]){S.seuil[S.ep]=1;sauve();toast("Tu peux déjà appeler le roi suivant avec le bouton **👑 Nouveau roi**. Mais il reste des lieux à explorer ici !",6500)}return}
+  if(S.ep<4){if(!S.tard[S.ep])succession()}else if(!S.fini){S.fini=true;sauve();finale()}}
+function succession(){
+  const E=EPOQUES[S.ep];
+  ouvreFiche(`<div class="fiche"><p class="grand">Le roi est mort…</p><p>${fmt(E.fin)}</p><p>${epoqueFinie(S.ep)?"Tu as exploré tous les lieux de cette époque. Bravo !":"Il te reste "+lieuxDe(S.ep).filter(l=>!S.lieux[l.id]).length+" lieux à explorer ici. Tu pourras y revenir quand tu veux."}</p></div><div class="pied"><button class="btn" id="f-tard">Plus tard</button><button class="btn suite" id="f-ok">Ouvrir l'arbre des rois</button></div>`);
+  $("#f-ok").onclick=()=>arbre(true);$("#f-tard").onclick=()=>{S.tard[S.ep]=1;sauve();fermeFiche();toast("D'accord. Quand tu voudras, touche le bouton **Nouveau roi**.")}}
+function finale(){
+  const or=LIEUX.filter(l=>S.lieux[l.id]==="or").length,sal=Object.keys(S.sal).length;
+  ouvreFiche(`<div class="fiche"><p class="grand">Vive le roi explorateur !</p>
+   <p>Tu as traversé plus de <strong>cent ans</strong> d'histoire, de Gutenberg à Montaigne.</p>
+   <p>Sceaux d'or : <strong>${or} / ${LIEUX.length}</strong><br>Salamandres trouvées : <strong>${sal} / ${SALAMANDRES.length}</strong></p>
+   <p>Ton titre : <strong>${titre()}</strong></p>
+   <p>${or<LIEUX.length||sal<SALAMANDRES.length?"Il reste des secrets sur la carte. Reviens voir chaque époque quand tu veux : rien ne presse.":"Tu as tout trouvé. François Ier t'aurait invité à sa Cour !"}</p></div>
+   <div class="pied"><button class="btn suite" id="f-ok">Retourner sur la carte</button></div>`);$("#f-ok").onclick=fermeFiche}
+function titre(){const n=LIEUX.filter(l=>S.lieux[l.id]==="or").length+Object.keys(S.sal).length;return n<10?"Page":n<22?"Écuyer":n<36?"Chevalier":n<50?"Humaniste":"Ami du roi"}
+function trouveSal(id){
+  const s=SALAMANDRES.find(x=>x.id===id);if(!s||S.sal[id])return;S.sal[id]=1;sauve();majHud();majEpoque3d();
+  ouvreFiche(`<div class="fiche"><p class="grand" style="color:var(--feu)">Une salamandre !</p><p style="font-size:21px;line-height:1.6">${fmt(s.t)}</p></div>
+   <div class="pied">${parle?'<button class="btn" id="f-dire">🔊 Écouter</button>':""}<button class="btn suite" id="f-ok">Continuer</button></div>`);
+  $("#f-ok").onclick=fermeFiche;attendre($("#f-ok"),Math.max(3500,Math.min(10000,mots(s.t)*380)),"Continuer");if(parle)$("#f-dire").onclick=()=>dire(s.t)}
+
+/* ---- frise France / Italie ---- */
+function frise(){
+  let h="";
+  EPOQUES.forEach((E,e)=>{
+    const ferme=e>S.max,L=lieuxDe(e).slice().sort((a,b)=>a.y-b.y),ans=[...new Set(L.map(l=>l.y))];
+    const carte=l=>`<button class="fz-e ${S.lieux[l.id]?"vu":""}" data-id="${l.id}" style="border-color:${CATS[l.k][2]}" ${ferme?"disabled":""}>${CATS[l.k][1]} ${l.c}${S.lieux[l.id]?" ✓":""}<small>${l.n}</small></button>`;
+    h+=`<div class="fz-roi" id="fz-${e}">${ferme?"🔒":"♛"} ${E.roi} <small>${E.ans} · ${E.sous}</small></div>`;
+    ans.forEach(a=>{h+=`<div class="fz-l"><div class="fz-c">${L.filter(l=>l.y===a&&l.s==="F").map(carte).join("")}</div><div class="fz-an">${a===1446?"Anti-<br>quité":a}</div><div class="fz-c">${L.filter(l=>l.y===a&&l.s!=="F").map(carte).join("")}</div></div>`})});
+  ouvreFiche(`<div class="tete"><h2>La frise des deux pays<small>Lis de haut en bas. Sur une même ligne : ce qui se passe au même moment. Touche une case pour y aller.</small></h2><button class="x" id="f-x" aria-label="Fermer">✕</button></div>
+   <div class="fz" id="fr-z"><div class="fz-h"><span style="background:var(--azur)">En France</span><i></i><span style="background:var(--arts)">En Italie et en Europe</span></div>${h}</div>`,true);
+  $("#f-x").onclick=fermeFiche;const z=$("#fr-z"),cible=$("#fz-"+S.ep);z.scrollTop=Math.max(0,cible.offsetTop-52);
+  z.onclick=e=>{const b=e.target.closest(".fz-e");if(b&&!b.disabled)aller(b.dataset.id)}}
+$("#b-frise").onclick=frise;
+
+/* ---- arbre ---- */
+function arbre(choix){
+  const E=EPOQUES[S.ep],vis=n=>n[7]<=S.max||(choix&&n[0]===E.suiv);
+  const base=choix?fmt(E.fin):"Touche un personnage pour savoir qui il est. Les rois ont un cadre doré. Les cases grises s'ouvriront avec les prochains rois.";
+  const traits=TRAITS.filter(t=>t[1]<=S.max).map(t=>`<path d="${t[0]}" fill="none" stroke="${t[2]?"#f0642a":"#5b6680"}" stroke-width="${t[2]?4:3}" ${t[2]?'stroke-dasharray="2 5" stroke-linecap="round"':""}/>`).join("");
+  const noeuds=ARBRE.map(n=>{const v=vis(n);
+    return `<g class="noeud ${n[6]?"roi":""} ${v?"":"cache"} ${n[0]===E.noeud&&!choix?"sel":""}" data-id="${n[0]}" transform="translate(${n[4]-70} ${n[5]})" tabindex="0" role="button" aria-label="${v?n[1]:"Personnage caché"}">
+     <rect width="140" height="54" rx="10"/>${v?`<text class="nom" x="70" y="${n[2]?20:24}" ${(n[1].length+(n[6]?2:0))>15?'textLength="130" lengthAdjust="spacingAndGlyphs"':""}>${n[6]?"♛ ":""}${n[1]}</text>${n[2]?`<text x="70" y="36" font-style="italic" style="font-size:13px">${n[2]}</text>`:""}<text x="70" y="${n[2]?50:44}" style="font-size:12.5px">${n[3]}</text>`:`<text class="nom" x="70" y="33">?</text>`}</g>`}).join("");
+  ouvreFiche(`<div class="tete"><h2>Arbre des rois<small>La famille des Valois · pointillés orange = mariage</small></h2><button class="x" id="f-x" aria-label="Fermer">✕</button></div>
+   <div class="arbre-info" id="a-info">${base}</div>
+   <div class="arbre-zone" id="a-zone"><svg viewBox="0 0 1010 800" role="img" aria-label="Arbre généalogique des rois de France, de Charles V à Henri III">${traits}${noeuds}</svg></div>`,true);
+  $("#f-x").onclick=()=>{fermeFiche();if(choix){S.tard[S.ep]=1;sauve();majHud()}};
+  const zone=$("#a-zone"),cible=ARBRE.find(n=>n[0]===E.noeud);
+  zone.scrollLeft=Math.max(0,cible[4]-zone.clientWidth/2);zone.scrollTop=Math.max(0,cible[5]-zone.clientHeight/2+40);
+  const agit=g=>{const n=ARBRE.find(x=>x[0]===g.dataset.id),info=$("#a-info");
+    zone.querySelectorAll(".sel").forEach(x=>x.classList.remove("sel"));g.classList.add("sel");
+    if(!vis(n)){info.innerHTML="Ce personnage est encore caché. Continue ton voyage pour le découvrir.";return}
+    if(choix){
+      if(n[0]===E.suiv){info.innerHTML=`<strong>Oui ! ${n[1]} devient roi.</strong> ${n[8]} <button class="btn feu" id="a-ok" style="margin-left:8px">Vive le roi !</button>`;
+        $("#a-ok").onclick=()=>{S.max=S.ep+1;sauve();fermeFiche();pile.length=0;vaEpoque(S.max,true)}}
+      else{info.innerHTML=`<strong>${n[1]}</strong> ne peut pas devenir roi maintenant. ${E.aide} Regarde : sa case clignote.`;
+        const bon=zone.querySelector('[data-id="'+E.suiv+'"]'),nb=ARBRE.find(x=>x[0]===E.suiv);bon.classList.add("indice");zone.scrollTo({left:Math.max(0,nb[4]-zone.clientWidth/2),top:Math.max(0,nb[5]-zone.clientHeight/2+40),behavior:"smooth"})}}
+    else info.innerHTML=`<strong>${n[1]}${n[2]?", "+n[2]:""}</strong> (${n[3]}). ${n[8]}`};
+  zone.onclick=e=>{const g=e.target.closest(".noeud");if(g)agit(g)};
+  zone.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){const g=e.target.closest(".noeud");if(g){e.preventDefault();agit(g)}}}}
+$("#b-arbre").onclick=()=>arbre(false);
+
+/* ---- carnet ---- */
+function carnet(onglet){
+  onglet=onglet||0;const noms=["Mes lieux","Antiquité","Lexique","Vidéos et sites","Sauvegarde"];let c="";
+  if(onglet===0){c=`<p>Ton titre : <strong>${titre()}</strong>. Sceaux d'or : ${LIEUX.filter(l=>S.lieux[l.id]==="or").length} / ${LIEUX.length}. Salamandres : ${Object.keys(S.sal).length} / ${SALAMANDRES.length}.</p><p>Touche un lieu pour y retourner.</p>`
+    +EPOQUES.map((e,i)=>`<h3>${e.roi} <span style="font-family:var(--texte);font-size:14px;font-weight:500">${e.ans}</span></h3>${i>S.max?"<p>🔒 À découvrir plus tard.</p>":`<ul class="lst">${lieuxDe(i).map(l=>`<li><button data-id="${l.id}"><i class="pt ${S.lieux[l.id]==="or"?"or":S.lieux[l.id]?"arg":""}"></i><span>${CATS[l.k][1]} ${l.c} <span style="color:var(--gris);font-size:15px">· ${l.n}, ${l.d}</span></span></button></li>`).join("")}</ul>`}`).join("")
+    +`<p style="margin-top:14px"><button class="btn" id="c-raz" style="border:2px solid var(--non);color:var(--non);box-shadow:none">Tout recommencer</button></p>`}
+  else if(onglet===1){const tout=[];LIEUX.forEach(l=>l.f.forEach((t,i)=>{if(t.startsWith("@A "))tout.push([l,i,t.slice(3)])}));const vus=tout.filter(x=>S.ant[x[0].id+":"+x[1]]);
+    c=`<p>Ce que la Renaissance doit aux <strong>Grecs</strong> et aux <strong>Romains</strong>. Tu as trouvé <strong>${vus.length} / ${tout.length}</strong> idées venues de l'Antiquité.</p>`+(vus.length?"<ul>"+vus.map(x=>`<li>${fmt(x[2])} <span style="color:var(--gris);font-size:15px">(${x[0].n})</span></li>`).join("")+"</ul>":"<p>Elles apparaîtront ici quand tu liras les fiches marquées 🏛️.</p>")}
+  else if(onglet===2)c="<p>Les quatre premiers mots viennent de ta leçon.</p><ul>"+LEXIQUE.map(m=>`<li><strong>${m[0]}</strong> : ${m[1]}</li>`).join("")+"</ul>";
+  else if(onglet===3)c="<p>À regarder avec un adulte. Les liens s'ouvrent dans une nouvelle page.</p><div class=\"liens\">"+Object.keys(LIENS).map(lien).join("")+"</div>";
+  else{const j=BASE.joueurs[BASE.actif];sauve();c=`<p>Joueur : <strong>${esc(j.nom)}</strong>. ${memoireOk?"Ta partie s'enregistre <strong>toute seule</strong> sur cet appareil, à chaque fiche.":"Ce navigateur refuse d'enregistrer la partie : note bien ton code."}</p>
+    <h3>Mon code de sauvegarde</h3><p>Avec ce code, tu retrouves tes sceaux et tes salamandres sur un autre appareil. Note-le ou copie-le.</p>
+    <p id="s-code" style="font-family:ui-monospace,Menlo,monospace;font-size:16px;word-break:break-all;background:#fff;border:2px dashed var(--azur);border-radius:12px;padding:10px;user-select:all">${esc(codeDe(j))}</p>
+    <p><button class="btn" id="s-copie" style="border:2px solid var(--encre);box-shadow:none">Copier le code</button> <button class="btn" id="s-joueurs" style="border:2px solid var(--encre);box-shadow:none">Changer de joueur</button></p>
+    <h3>Temps de lecture</h3><p>Le bouton « Suite » attend que la fiche soit lue.</p><div class="choix bacs" id="s-tempo">${[["Court",.5],["Normal",1],["Long",1.5]].map(t=>`<button data-t="${t[1]}" class="${BASE.tempo===t[1]?"juste":""}">${t[0]}</button>`).join("")}</div>
+    <h3>Effacer</h3><p><button class="btn" id="s-suppr" style="border:2px solid var(--non);color:var(--non);box-shadow:none">Supprimer le joueur ${esc(j.nom)}</button></p>`}
+  ouvreFiche(`<div class="tete"><h2>Mon carnet</h2><button class="x" id="f-x" aria-label="Fermer">✕</button></div><div class="onglets" style="padding-top:10px">${noms.map((n,i)=>`<button data-o="${i}" class="${i===onglet?"ici":""}">${n}</button>`).join("")}</div><div class="fiche">${c}</div>`);
+  $("#f-x").onclick=fermeFiche;document.querySelector(".onglets").onclick=e=>{const b=e.target.closest("button");if(b)carnet(+b.dataset.o)};
+  if(onglet===4){
+    $("#s-copie").onclick=()=>{const t=codeDe(BASE.joueurs[BASE.actif]);try{navigator.clipboard.writeText(t).then(()=>toast("Code copié."),()=>toast("Copie impossible ici. Note le code à la main."))}catch(e){toast("Copie impossible ici. Note le code à la main.")}};
+    $("#s-joueurs").onclick=()=>ecranJoueurs();
+    $("#s-tempo").onclick=e=>{const b=e.target.closest("button");if(b){BASE.tempo=+b.dataset.t;sauve();carnet(4)}};
+    $("#s-suppr").onclick=()=>{$(".fiche").innerHTML='<p class="grand">Supprimer ce joueur ?</p><p>Sa partie sera effacée de cet appareil.</p><p><button class="btn feu" id="c-oui">Oui, supprimer</button> <button class="btn" id="c-non" style="border:2px solid var(--encre);box-shadow:none">Non, garder</button></p>';
+      $("#c-non").onclick=()=>carnet(4);$("#c-oui").onclick=()=>{BASE.joueurs.splice(BASE.actif,1);BASE.actif=-1;S=vide();try{localStorage.setItem(CLE,JSON.stringify(BASE))}catch(e){}ecranJoueurs()}}}
+  if(onglet===0){document.querySelector(".fiche").onclick=e=>{const b=e.target.closest(".lst button");if(b)aller(b.dataset.id)};
+   $("#c-raz").onclick=()=>{
+    $(".fiche").innerHTML='<p class="grand">Tout effacer ?</p><p>Tu perdras tes sceaux et tes salamandres.</p><p><button class="btn feu" id="c-oui">Oui, recommencer</button> <button class="btn" id="c-non" style="border:2px solid var(--encre);box-shadow:none">Non, garder</button></p>';
+    $("#c-non").onclick=()=>carnet(0);$("#c-oui").onclick=()=>{S=vide();pile.length=0;sauve();fermeFiche();vaEpoque(0,true)}}}}
+$("#b-carnet").onclick=()=>carnet(0);
+function codeDe(j){const s=j.S;return "SAL-"+propre(j.nom)+"-"+s.ep+s.max+"-"+LIEUX.map(l=>s.lieux[l.id]==="or"?"o":s.lieux[l.id]?"a":"0").join("")+"-"+SALAMANDRES.map(x=>s.sal[x.id]?1:0).join("")}
+function lisCode(t){const p=String(t).trim().split("-");if(p.length!==5||p[0].toUpperCase()!=="SAL")return null;
+  const nom=propre(p[1]),a=p[3],b=p[4];if(!nom||!/^[0-4][0-4]$/.test(p[2])||a.length!==LIEUX.length||/[^0ao]/.test(a)||b.length!==SALAMANDRES.length||/[^01]/.test(b))return null;
+  const s=vide();s.max=+p[2][1];s.ep=Math.min(+p[2][0],s.max);
+  LIEUX.forEach((l,i)=>{if(a[i]!=="0"){s.lieux[l.id]=a[i]==="o"?"or":"argent";s.vu[l.id]=l.f.length+1;l.f.forEach((f,k)=>{if(f.startsWith("@A "))s.ant[l.id+":"+k]=1})}});
+  SALAMANDRES.forEach((x,i)=>{if(b[i]==="1")s.sal[x.id]=1});for(let e=0;e<=s.max;e++)s.intro[e]=1;
+  return{nom,S:s}}
+function activer(i){BASE.actif=i;S=Object.assign(vide(),BASE.joueurs[i].S);pile.length=0;P=null;$("#panneau").hidden=true;sauve();fermeFiche();vaEpoque(S.ep);toast("Bonjour **"+esc(BASE.joueurs[i].nom)+"** ! Ta partie est enregistrée toute seule sur cet appareil.")}
+function ecranJoueurs(msg){
+  const a=BASE.joueurs[BASE.actif];
+  ouvreFiche(`<div class="tete"><h2>Qui joue ?<small>Chaque joueur a sa propre partie.</small></h2>${a?'<button class="x" id="f-x" aria-label="Fermer">✕</button>':""}</div><div class="fiche">
+   ${msg?`<p class="retour non">${msg}</p>`:""}
+   <div class="choix" id="j-liste">${BASE.joueurs.map((j,i)=>{const s=Object.assign(vide(),j.S);return `<button data-i="${i}" class="${i===BASE.actif?"juste":""}"><strong>${esc(j.nom)}</strong><br><span style="font-size:15px;color:var(--gris)">${EPOQUES[s.ep].roi} · ${Object.keys(s.lieux).length} lieux · ${Object.keys(s.sal).length} salamandres</span></button>`}).join("")}</div>
+   ${BASE.joueurs.length<6?`<h3>Nouveau joueur</h3><form id="j-form" style="display:flex;gap:8px;flex-wrap:wrap"><input id="j-nom" maxlength="14" placeholder="Ton prénom" autocomplete="off" style="flex:1;min-width:150px;font:inherit;padding:10px 12px;border-radius:12px;border:2px solid var(--encre)"><button class="btn suite" style="background:var(--azur);color:#fff">Ajouter</button></form>`:""}
+   <h3>Reprendre avec un code</h3><form id="j-fcode" style="display:flex;gap:8px;flex-wrap:wrap"><input id="j-code" placeholder="SAL-…" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;min-width:150px;font:inherit;padding:10px 12px;border-radius:12px;border:2px solid var(--encre)"><button class="btn" style="border:2px solid var(--encre);box-shadow:none">Reprendre</button></form>
+   <p style="font-size:15px;color:var(--gris);margin-top:12px">${memoireOk?"La partie s'enregistre toute seule dans ce navigateur, sur cet appareil. Pour jouer ailleurs, note ton code dans Carnet → Sauvegarde.":"Attention : ce navigateur refuse d'enregistrer la partie. Note ton code dans Carnet → Sauvegarde avant de quitter."}</p></div>`);
+  if(a)$("#f-x").onclick=fermeFiche;
+  $("#j-liste").onclick=e=>{const b=e.target.closest("button");if(b)activer(+b.dataset.i)};
+  const f=$("#j-form");if(f)f.onsubmit=e=>{e.preventDefault();const n=propre($("#j-nom").value);if(!n){$("#j-nom").focus();return}
+    if(BASE.joueurs.some(j=>j.nom.toLowerCase()===n.toLowerCase())){ecranJoueurs("Ce prénom existe déjà. Touche-le dans la liste.");return}
+    BASE.joueurs.push({nom:n,S:vide()});activer(BASE.joueurs.length-1)};
+  $("#j-fcode").onsubmit=e=>{e.preventDefault();const r=lisCode($("#j-code").value);if(!r){ecranJoueurs("Ce code n'est pas bon. Vérifie chaque lettre et chaque tiret.");return}
+    let i=BASE.joueurs.findIndex(j=>j.nom.toLowerCase()===r.nom.toLowerCase());if(i<0){if(BASE.joueurs.length>=6){ecranJoueurs("Il y a déjà 6 joueurs. Supprime-en un dans Carnet → Sauvegarde.");return}BASE.joueurs.push(r);i=BASE.joueurs.length-1}else BASE.joueurs[i].S=r.S;activer(i)}}
+$("#b-joueur").onclick=()=>ecranJoueurs();
+
+/* ============ MINI-JEUX ============ */
+const JEUX={
+ quiz(el,j,c){
+  const o=melange(j.o.map((t,i)=>({t,ok:i===0})));
+  el.innerHTML=`<p class="q">${fmt(j.q)}</p><div class="choix">${o.map((x,i)=>`<button data-i="${i}">${x.t}</button>`).join("")}</div><div class="retour" id="j-r"></div>`;
+  const r=el.querySelector("#j-r");let fini=false;
+  el.querySelector(".choix").onclick=e=>{const b=e.target.closest("button");if(!b||fini||b.disabled)return;
+    if(o[+b.dataset.i].ok){fini=true;b.classList.add("juste");r.className="retour ok";r.textContent="Exact !";c.gagne()}
+    else{b.classList.add("faux");b.disabled=true;c.rate();r.className="retour non";r.innerHTML='Pas tout à fait. La réponse est dans une fiche. <button class="btn" id="j-rel" style="border:2px solid var(--encre);box-shadow:none;margin-top:8px">Relire la fiche</button>';
+      r.querySelector("#j-rel").onclick=()=>c.relire(j.back)}}},
+ tri(el,j,c){
+  const items=melange(j.items);let k=0;
+  el.innerHTML=`<p class="q">${j.q} <span id="j-n" style="color:var(--gris);font-weight:400"></span></p><div class="carte-jeu" id="j-c"></div><div class="choix bacs">${j.bacs.map((b,i)=>`<button data-i="${i}">${b}</button>`).join("")}</div><div class="retour" id="j-r"></div>`;
+  const carte=el.querySelector("#j-c"),r=el.querySelector("#j-r"),n=el.querySelector("#j-n");
+  const montre=()=>{carte.textContent=items[k][0];n.textContent=(k+1)+" / "+items.length};montre();
+  el.querySelector(".bacs").onclick=e=>{const b=e.target.closest("button");if(!b||k>=items.length)return;
+    if(+b.dataset.i===items[k][1]){k++;r.className="retour ok";r.textContent="Oui !";if(k<items.length)montre();else{carte.textContent="Tout est bien rangé.";n.textContent="";c.gagne()}}
+    else{c.rate();r.className="retour non";r.textContent="Non. Réfléchis encore un peu."}}},
+ venus(el,j,c){
+  const cibles=[["vents","les vents qui soufflent","Les vents soufflent pour pousser Vénus vers le rivage."],["roses","les roses","Des roses tombent du ciel."],
+   ["coq","le coquillage","Vénus voyage debout dans un coquillage. Il semble sortir de l'écume."],["venus","Vénus","Vénus est en train de naître de la Mer, sa mère. Son corps est peint comme une statue antique."],
+   ["manteau","le manteau fleuri","Une déesse s'empresse de la couvrir d'un manteau fleuri."],["mer","la mer","La mer est calme, avec quelques vagues."]];
+  let k=0;
+  el.innerHTML=`<p class="q" id="j-q"></p>
+  <svg class="dessin" viewBox="0 0 360 230" role="img" aria-label="Dessin simplifié de La Naissance de Vénus">
+   <rect width="360" height="140" fill="#cfe7ee"/>
+   <g class="zone" data-k="mer"><rect y="138" width="360" height="92" fill="#8fc4cf"/><path d="M10 165q8-7 16 0M60 190q8-7 16 0M40 215q8-7 16 0M250 205q8-7 16 0M100 175q8-7 16 0M285 180q8-7 16 0M300 215q8-7 16 0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></g>
+   <path d="M300 230V150q6-22 28-26l32-4v110z" fill="#7d9b5c"/><path d="M322 128V40M340 124V30" stroke="#6b4a2c" stroke-width="6"/><ellipse cx="330" cy="38" rx="34" ry="30" fill="#4f7a3f"/>
+   <g class="zone" data-k="vents"><rect x="0" y="10" width="118" height="110" fill="transparent"/><path d="M4 30q34-30 70 4-30 6-44 34z" fill="#8aa7b8"/><path d="M20 60q30-20 62 6-20 22-52 14z" fill="#b9c9a8"/>
+    <circle cx="78" cy="48" r="16" fill="#f1cfae"/><circle cx="62" cy="76" r="14" fill="#f4d9bd"/><path d="M66 36q14-12 28 2" fill="none" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M96 52h22M94 60l22 8M78 84l24 12" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>
+   <g class="zone" data-k="roses"><rect x="96" y="20" width="70" height="120" fill="transparent"/>${[[112,34],[134,56],[118,84],[146,98],[128,122],[156,40]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#e58aa0"/><circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#c2516d"/>`).join("")}</g>
+   <g class="zone" data-k="coq"><path d="M120 196q62-74 124 0-62 26-124 0z" fill="#f3dcc6" stroke="#b9835f" stroke-width="2.5"/><path d="M182 205V152M182 205l-34-26M182 205l34-26M182 205l-52-8M182 205l52-8" stroke="#b9835f" stroke-width="2"/></g>
+   <g class="zone" data-k="venus"><path d="M176 70q8-3 14 2 6 8 2 20l6 34-4 46h-22l-4-46 4-34q-4-14 8-22z" fill="#f6dfca"/><circle cx="184" cy="60" r="12" fill="#f6dfca"/>
+    <path d="M174 54q10-14 24 0 10 22-2 52-6 26 10 40-22 0-24-28 0-22-8-32-6-16 0-32z" fill="#e2a84a"/></g>
+   <g class="zone" data-k="manteau"><rect x="212" y="52" width="92" height="140" fill="transparent"/><path d="M262 78q14 2 18 20l6 82h-34l2-80q0-18 8-22z" fill="#fff"/><circle cx="268" cy="68" r="11" fill="#f4d9bd"/><path d="M258 62q10-12 22 0" fill="none" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M214 92q26-22 46 4 6 30-6 62-26 12-42-10 10-30 2-56z" fill="#d9688a"/>${[[228,104],[244,122],[232,142],[250,96],[246,150]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#fff"/>`).join("")}</g>
+  </svg><div class="retour" id="j-r"></div>`;
+  const q=el.querySelector("#j-q"),r=el.querySelector("#j-r"),pose=()=>q.innerHTML="Touche sur le tableau : <strong>"+cibles[k][1]+"</strong> <span style=\"color:var(--gris);font-weight:400\">"+(k+1)+" / "+cibles.length+"</span>";pose();
+  el.querySelector("svg").onclick=e=>{const g=e.target.closest(".zone");if(!g||k>=cibles.length)return;
+    if(g.dataset.k===cibles[k][0]){g.classList.add("trouve");r.className="retour ok";r.textContent=cibles[k][2];k++;
+      if(k<cibles.length)pose();else{q.innerHTML="Tu as tout trouvé. Les peintres de la Renaissance adorent les <strong>détails</strong>.";c.gagne()}}
+    else{c.rate();r.className="retour non";r.textContent="Ce n'est pas ça. Regarde encore le tableau."}}},
+ vitruve(el,j,c){
+  el.innerHTML=`<p class="q">Écarte les bras du bonhomme. Quand le bout de ses doigts touche le carré, compare les deux mesures.</p>
+  <svg class="dessin" viewBox="0 0 300 250" style="max-width:320px" role="img" aria-label="Homme dans un carré et un cercle">
+   <circle cx="150" cy="113" r="107" fill="none" stroke="#b9851a" stroke-width="2"/><rect id="v-car" x="60" y="40" width="180" height="180" fill="none" stroke="#5b6680" stroke-width="2.5"/>
+   <circle cx="150" cy="56" r="15" fill="#f1cfae" stroke="#14203a" stroke-width="2"/><path d="M150 71V150M150 150L132 220M150 150L168 220" stroke="#14203a" stroke-width="7" stroke-linecap="round" fill="none"/>
+   <line id="v-bras" x1="90" x2="210" y1="92" y2="92" stroke="#f0642a" stroke-width="7" stroke-linecap="round"/>
+   <path d="M48 40V220M42 40h12M42 220h12" stroke="#2c5fb6" stroke-width="2.5"/><text x="30" y="134" font-size="13" fill="#2c5fb6" font-weight="700" transform="rotate(-90 30 134)" text-anchor="middle">hauteur</text></svg>
+  <label for="v-r" style="display:block;font-size:18px;font-weight:700;text-align:center">Bras : <span id="v-b">120</span> cm · Hauteur : 180 cm</label>
+  <input id="v-r" type="range" min="100" max="220" value="120" style="width:100%;height:44px;accent-color:#f0642a">
+  <div class="retour" id="j-r"></div>`;
+  const r=el.querySelector("#j-r"),bras=el.querySelector("#v-bras"),car=el.querySelector("#v-car");let fini=false;
+  el.querySelector("#v-r").oninput=e=>{const v=+e.target.value;bras.setAttribute("x1",150-v/2);bras.setAttribute("x2",150+v/2);el.querySelector("#v-b").textContent=v;
+    if(Math.abs(v-180)<=2){car.setAttribute("stroke","#1f8a4c");car.setAttribute("stroke-width","5");r.className="retour ok";r.textContent="Regarde : bras étendus = hauteur. L'homme entre exactement dans le carré !";if(!fini){fini=true;c.gagne()}}
+    else{car.setAttribute("stroke","#5b6680");car.setAttribute("stroke-width","2.5");if(!fini){r.className="retour";r.textContent=v<180?"Les bras sont trop courts.":"Les bras dépassent du carré !"}}}},
+ chateau(el,j,c){
+  const st={pont:0,fen:0,tours:0,jardin:0},
+   act=melange([["pont","Supprimer le pont-levis",1],["fen","Percer de grandes fenêtres",1],["tours","Abattre les grosses tours",1],["jardin","Planter des jardins autour",1],["x1","Ajouter des meurtrières",0],["x2","Creuser un fossé plus profond",0]]);
+  el.innerHTML=`<p class="q">Transforme ce vieux château fort en palais de la Renaissance. Choisis les <strong>quatre</strong> bons travaux.</p><svg class="dessin" viewBox="0 0 360 200" id="ch" role="img" aria-label="Château à transformer"></svg>
+   <div class="choix">${act.map(a=>`<button data-k="${a[0]}">${a[1]}</button>`).join("")}</div><div class="retour" id="j-r"></div>`;
+  const svg=el.querySelector("#ch"),r=el.querySelector("#j-r");
+  const dessine=()=>{const n=st.pont+st.fen+st.tours+st.jardin,mur=["#8b9099","#a3a59f","#c4c0ae","#ddd6c0","#f1ead6"][n];let s=`<rect width="360" height="200" fill="#cfe7ee"/><rect y="150" width="360" height="50" fill="#86b06a"/>`;
+    s+=st.jardin?[30,70,250,290].map(x=>`<rect x="${x}" y="162" width="34" height="26" rx="3" fill="#5f9a4c"/><circle cx="${x+9}" cy="171" r="3" fill="#e58aa0"/><circle cx="${x+24}" cy="180" r="3" fill="#ffe55e"/>`).join(""):`<rect y="158" width="360" height="22" fill="#4f93c4"/>`;
+    s+=`<rect x="80" y="80" width="200" height="80" fill="${mur}" stroke="#5b6680" stroke-width="2"/>`;
+    s+=st.fen?[100,136,206,242].map(x=>`<rect x="${x}" y="94" width="20" height="30" fill="#fff6c8" stroke="#5b6680" stroke-width="2"/><path d="M${x+10} 94v30M${x} 109h20" stroke="#5b6680" stroke-width="1.5"/>`).join(""):[108,144,214,250].map(x=>`<rect x="${x}" y="100" width="4" height="18" fill="#2a2f3a"/>`).join("");
+    s+=st.tours?`<path d="M80 80L180 44 280 80z" fill="#44597c"/><path d="M70 80h24v80H70zM266 80h24v80h-24z" fill="${mur}" stroke="#5b6680" stroke-width="2"/><path d="M66 80l16-34 16 34zM262 80l16-34 16 34z" fill="#44597c"/>`
+      :`<path d="M80 80h200v-8h-14v-8h-14v8h-16v-8h-14v8h-16v-8h-14v8h-16v-8h-14v8h-16v-8h-14v8H80z" fill="${mur}" stroke="#5b6680" stroke-width="2"/><path d="M48 52h52v108H48zM260 52h52v108h-52z" fill="${mur}" stroke="#5b6680" stroke-width="2"/><path d="M48 52v-10h10v10h11v-10h10v10h11v-10h10v10zM260 52v-10h10v10h11v-10h10v10h11v-10h10v10z" fill="${mur}" stroke="#5b6680" stroke-width="2"/>`;
+    s+=st.pont?`<path d="M164 160v-34q16-18 32 0v34z" fill="#7a5433"/><path d="M158 160h44l8 26h-60z" fill="#e9e1cb" stroke="#5b6680" stroke-width="1.5"/>`
+      :`<rect x="164" y="118" width="32" height="42" fill="#2a2f3a"/><path d="M164 160h32l6 24h-44z" fill="#7a5433"/><path d="M166 120l-6 62M194 120l6 62" stroke="#2a2f3a" stroke-width="2"/>`;
+    svg.innerHTML=s};dessine();
+  el.querySelector(".choix").onclick=e=>{const b=e.target.closest("button");if(!b||b.disabled)return;const a=act.find(x=>x[0]===b.dataset.k);b.disabled=true;
+    if(a[2]){st[a[0]]=1;b.classList.add("juste");dessine();r.className="retour ok";r.textContent={pont:"Le pont-levis disparaît. On entre librement.",fen:"Les murs sont percés de grandes fenêtres. La lumière entre !",tours:"Les grosses tours de défense tombent. Voici de beaux toits d'ardoise.",jardin:"De beaux jardins entourent le château, ouvert sur la campagne."}[a[0]];
+      if(st.pont+st.fen+st.tours+st.jardin===4){r.textContent="Magnifique ! Ton château fort est devenu une belle demeure de la Renaissance.";c.gagne()}}
+    else{b.classList.add("faux");c.rate();r.className="retour non";r.textContent="Non : ça, c'est pour se défendre, comme au Moyen Âge. On n'en a plus besoin."}}},
+ presse(el,j,c){
+  const mot="LIVRE";let cases=[],dispo=melange(mot.split("").map((l,i)=>({l,i})));
+  el.innerHTML=`<p class="q">Imprime le mot <strong>LIVRE</strong>. Attention : les lettres en métal sont <strong>à l'envers</strong>, comme dans un miroir. Sur la feuille, tout s'inverse !</p>
+   <div class="plomb" id="pr-c"></div><div class="plomb" id="pr-d"></div>
+   <div style="display:flex;gap:10px;justify-content:center;margin-top:6px"><button class="btn" id="pr-e" style="border:2px solid var(--encre);box-shadow:none">Effacer</button><button class="btn feu" id="pr-i" disabled>Imprimer</button></div>
+   <div id="pr-f"></div><div class="retour" id="j-r"></div>`;
+  const C=el.querySelector("#pr-c"),D=el.querySelector("#pr-d"),I=el.querySelector("#pr-i"),F=el.querySelector("#pr-f"),r=el.querySelector("#j-r");let fini=false;
+  const maj=()=>{C.innerHTML=mot.split("").map((_,k)=>cases[k]?`<span><b>${cases[k].l}</b></span>`:'<span class="vide"></span>').join("");
+    D.innerHTML=dispo.map(d=>`<button data-i="${d.i}" ${cases.includes(d)?"disabled":""} aria-label="Lettre ${d.l}"><b>${d.l}</b></button>`).join("");I.disabled=cases.length<mot.length||fini};maj();
+  D.onclick=e=>{const b=e.target.closest("button");if(!b||b.disabled||fini)return;cases.push(dispo.find(d=>d.i===+b.dataset.i));maj()};
+  el.querySelector("#pr-e").onclick=()=>{if(fini)return;cases=[];F.innerHTML="";r.textContent="";maj()};
+  I.onclick=()=>{const imp=cases.map(x=>x.l).reverse().join("");F.innerHTML=`<div class="feuille">${imp}</div>`;
+    if(imp===mot){fini=true;maj();r.className="retour ok";r.textContent="Parfait ! Les imprimeurs lisent à l'envers toute la journée. Quel métier !";c.gagne()}
+    else{c.rate();r.className="retour non";r.textContent="Raté : la feuille dit « "+imp+" ». Efface, puis place les lettres dans l'autre sens."}}}
+};
+
+
+/* ============ DÉPART ============ */
+try{if(!window.THREE)throw 0;init3d()}catch(e){ok3d=false;document.body.classList.add("sans3d");console.error(e)}
+majHud();majEpoque3d();
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("#voile").hidden){if($("#f-x"))$("#f-x").click()}else if(P)fermePanneau()}});
+ecranJoueurs();
+</script>
+</body>
+</html>
